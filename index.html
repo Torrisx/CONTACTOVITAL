@@ -173,16 +173,23 @@
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Pega aquí tu objeto firebaseConfig si quieres sincronización en la nube desde GitHub Pages:
+    // const USER_FIREBASE_CONFIG = {
+    //   apiKey: "AIzaSyAX0_SGKtoxgutDqkjhEvkFPlw864-8_gk",
+    //   authDomain: "...",
+    //   projectId: "...",
+    //   storageBucket: "...",
+    //   messagingSenderId: "...",
+    //   appId: "..."
+    // };
     const USER_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAX0_SGKtoxgutDqkjhEvkFPlw864-8_gk",
-  authDomain: "contacto-vital-72165.firebaseapp.com",
-  projectId: "contacto-vital-72165",
-  storageBucket: "contacto-vital-72165.firebasestorage.app",
-  messagingSenderId: "698513262593",
-  appId: "1:698513262593:web:5cac9c3595f4429f5c5800",
-  measurementId: "G-8DD47LR04S",
-};
-    const USER_FIREBASE_CONFIG = null;
+      apiKey: "AIzaSyAX0_SGKtoxgutDqkjhEvkFPlw864-8_gk",
+      authDomain: "contacto-vital-72165.firebaseapp.com",
+      projectId: "contacto-vital-72165",
+      storageBucket: "contacto-vital-72165.firebasestorage.app",
+      messagingSenderId: "698513262593",
+      appId: "1:698513262593:web:5cac9c3595f4429f5c5800",
+      measurementId: "G-8DD47LR04S",
+    };
 
     const APP_SLUG = "contacto-vital-billetera";
 
@@ -2215,159 +2222,4 @@
         });
 
         document.getElementById("admin-next-page")?.addEventListener("click", () => {
-          uiState.adminPage += 1;
-          renderApp();
-        });
-
-        document.querySelectorAll(".toggle-pass-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const id = btn.getAttribute("data-toggle-pass");
-            if (!id) return;
-            if (uiState.revealedPasswords.has(id)) uiState.revealedPasswords.delete(id);
-            else uiState.revealedPasswords.add(id);
-            renderApp();
-          });
-        });
-
-        document.querySelectorAll(".adjust-balance-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const advId = btn.getAttribute("data-adjust-id");
-            const inputEl = document.querySelector(`[data-adjust-input="${advId}"]`);
-            if (!advId || !inputEl) return;
-            const res = adjustAdvisorBalanceByAdmin(session, advId, inputEl.value, "Ajuste de saldo desde panel admin");
-            if (!res.ok) {
-              showToast(res.error, "error");
-              return;
-            }
-            showToast(`Saldo actualizado para ${res.updatedAdv.name}.`, "success");
-            renderApp();
-          });
-        });
-
-        document.querySelectorAll(".delete-advisor-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const advId = btn.getAttribute("data-delete-id");
-            if (!advId) return;
-            const res = deleteAdvisorByAdmin(session, advId);
-            if (!res.ok) {
-              showToast(res.error, "error");
-              return;
-            }
-            showToast(`Asesor ${res.deletedName} eliminado.`, "warning");
-            renderApp();
-          });
-        });
-      } else {
-        document.getElementById("advisor-transfer-form")?.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const recipientId = document.getElementById("transfer-recipient")?.value || "";
-          const amount = document.getElementById("transfer-amount")?.value || "";
-          const note = document.getElementById("transfer-note")?.value || "";
-          const res = transferVitalCoins({ senderSession: session, recipientAdvisorId: recipientId, amount, note });
-          if (!res.ok) {
-            showToast(res.error, "error");
-            return;
-          }
-          showToast(`Transferiste ${formatVc(amount)} a ${res.tx.recipientName}.`, "success");
-          renderApp();
-        });
-
-        document.querySelectorAll(".redeem-btn").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const rewId = btn.getAttribute("data-redeem-id");
-            if (!rewId) return;
-            const res = redeemReward(session, rewId);
-            if (!res.ok) {
-              showToast(res.error, "error");
-              return;
-            }
-            showToast(`Canjeaste "${res.redemption.rewardTitle}".`, "success");
-            renderApp();
-          });
-        });
-      }
-
-      document.getElementById("weekly-calc-form")?.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const fd = new FormData(e.currentTarget);
-        const metrics = getSettings().metrics;
-        uiState.lastCalcBreakdown = calculateWeeklyVitalCoins(
-          {
-            qualityPct: fd.get("qualityPct"),
-            salesValue: fd.get("salesValue"),
-            codBeforeGoal: fd.get("codBeforeGoal"),
-            codAfterGoal: fd.get("codAfterGoal"),
-            instantBeforeGoal: fd.get("instantBeforeGoal"),
-            instantAfterGoal: fd.get("instantAfterGoal"),
-            streakSales: fd.get("streakSales"),
-            firstSaleDayCount: fd.get("firstSaleDayCount"),
-            noCancelledDayCount: fd.get("noCancelledDayCount"),
-            doubleDailyGoalCount: fd.get("doubleDailyGoalCount"),
-            tripleDailyGoalCount: fd.get("tripleDailyGoalCount"),
-            podiumRank: fd.get("podiumRank"),
-            goal3DaysStreak: fd.get("goal3DaysStreak") === "on",
-            weeklyStreak4of5: fd.get("weeklyStreak4of5") === "on",
-            weeklyStreak5of5: fd.get("weeklyStreak5of5") === "on",
-            beatPrevWeekAvg: fd.get("beatPrevWeekAvg") === "on",
-          },
-          metrics
-        );
-        renderApp();
-      });
-    }
-
-    function renderApp() {
-      const session = getCurrentSession();
-      renderHeader(session);
-      updateSyncBadge();
-
-      const root = document.getElementById("app-root");
-      if (!root) return;
-
-      if (!session) {
-        root.innerHTML = renderAuthScreen();
-      } else if (isAuthorizedAdmin(session)) {
-        root.innerHTML = renderAdminDashboard(session);
-      } else {
-        root.innerHTML = renderAdvisorDashboard(session);
-      }
-
-      bindEvents(session);
-    }
-
-    function setupModal() {
-      const modal = document.getElementById("reset-modal");
-      const openBtn = document.getElementById("open-reset-modal-btn");
-      const cancelBtn = document.getElementById("cancel-reset-btn");
-      const confirmBtn = document.getElementById("confirm-reset-btn");
-
-      const closeModal = () => {
-        modal?.classList.add("hidden");
-        modal?.classList.remove("flex");
-      };
-
-      openBtn?.addEventListener("click", () => {
-        modal?.classList.remove("hidden");
-        modal?.classList.add("flex");
-      });
-      cancelBtn?.addEventListener("click", closeModal);
-      confirmBtn?.addEventListener("click", () => {
-        closeModal();
-        resetDemoData();
-      });
-      modal?.addEventListener("click", (e) => {
-        if (e.target === modal) closeModal();
-      });
-    }
-
-    getAdvisors();
-    getTransactions();
-    getRedemptions();
-    getRewards();
-    getSettings();
-    setupModal();
-    renderApp();
-    initFirebaseAndAuth();
-  </script>
-</body>
-</html>
+          uiState
