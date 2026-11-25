@@ -1,0 +1,2372 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contacto Vital — Billetera Digital de Puntos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            navy: {
+              950: '#040914',
+              900: '#060d1f',
+              850: '#0b1736',
+              800: '#11224d',
+              700: '#172c54',
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(37, 99, 235, 0.22), transparent 42%),
+        radial-gradient(circle at 88% 12%, rgba(6, 182, 212, 0.14), transparent 40%),
+        radial-gradient(circle at 80% 78%, rgba(16, 185, 129, 0.08), transparent 45%),
+        radial-gradient(circle at 50% 100%, rgba(17, 34, 77, 0.48), transparent 55%),
+        #060d1f;
+      color: #f1f5f9;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .glass-navy {
+      background: linear-gradient(160deg, rgba(17, 34, 77, 0.90), rgba(11, 23, 54, 0.96));
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      box-shadow: 0 22px 48px -22px rgba(4, 9, 20, 0.95), inset 0 1px 0 rgba(148, 163, 184, 0.12);
+    }
+    .glass-subtle {
+      background: rgba(11, 23, 54, 0.86);
+      border: 1px solid rgba(56, 189, 248, 0.16);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(11, 23, 54, 0.65);
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(56, 189, 248, 0.36);
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(56, 189, 248, 0.62);
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-cyan-500/30 selection:text-cyan-100">
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2.5 max-w-sm w-full px-3 sm:px-0 pointer-events-none"></div>
+
+  <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+    <div class="glass-navy rounded-2xl max-w-md w-full p-6 border border-amber-400/25 shadow-2xl">
+      <div class="flex items-start gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/30 flex items-center justify-center text-amber-300 shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-base font-bold text-white">Reiniciar datos de demostración</h3>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1.5 leading-relaxed">
+            Se restaurarán los asesores iniciales (incluida Laura Pérez con 0 VitalCoins), movimientos, recompensas, canjes, metas por grupo y métricas del Sistema de VitalCoins Semanales, conservando las 3 cuentas de administrador autorizadas.
+          </p>
+        </div>
+      </div>
+      <div class="mt-6 flex items-center justify-end gap-2.5">
+        <button id="cancel-reset-btn" type="button" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer">
+          Cancelar
+        </button>
+        <button id="confirm-reset-btn" type="button" class="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-950/60 transition cursor-pointer">
+          Sí, reiniciar datos
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <header class="sticky top-0 z-30 border-b border-cyan-500/15 bg-[#060d1f]/90 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-cyan-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-900/40 shrink-0">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-2m-4-3h4m0 0l-2-2m2 2l-2 2M16 12a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold tracking-tight text-white text-sm sm:text-base truncate">Contacto Vital</span>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/25">
+              Billetera Digital de Puntos
+            </span>
+          </div>
+          <p class="text-[11px] sm:text-xs text-slate-400 truncate">Sistema de VitalCoins Semanales • Modo Alta Competencia</p>
+        </div>
+      </div>
+
+      <div id="header-session-area" class="flex items-center gap-2 sm:gap-3 shrink-0"></div>
+    </div>
+  </header>
+
+  <div class="border-b border-cyan-500/10 bg-[#07112a]/85">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center gap-2">
+        <span id="live-sync-dot" class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+        <span id="live-sync-label" class="font-semibold text-slate-200">Sincronización multi-dispositivo: Modo local</span>
+      </div>
+      <span id="live-sync-detail" class="text-[11px] text-slate-400">
+        Configura USER_FIREBASE_CONFIG para sincronizar en tiempo real entre dispositivos en GitHub Pages.
+      </span>
+    </div>
+  </div>
+
+  <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8"></main>
+
+  <footer class="border-t border-cyan-500/10 bg-[#040914]/95 mt-14">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+      <div class="flex flex-wrap items-center gap-2 text-center sm:text-left">
+        <span class="font-semibold text-slate-200">Contacto Vital — Billetera Digital de Puntos</span>
+        <span>•</span>
+        <span id="sync-status-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-400/25">
+          Modo local / respaldado
+        </span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="open-reset-modal-btn" type="button" class="px-3 py-1.5 rounded-xl font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 transition cursor-pointer">
+          Reiniciar datos demo
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import {
+      getAuth,
+      signInAnonymously,
+      signInWithCustomToken,
+      onAuthStateChanged,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      deleteDoc,
+      onSnapshot,
+      collection,
+    } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // Pega aquí tu objeto firebaseConfig si quieres sincronización en la nube desde GitHub Pages:
+    // const USER_FIREBASE_CONFIG = {
+    //   apiKey: "...",
+    //   authDomain: "...",
+    //   projectId: "...",
+    //   storageBucket: "...",
+    //   messagingSenderId: "...",
+    //   appId: "..."
+    // };
+    const USER_FIREBASE_CONFIG = null;
+
+    const APP_SLUG = "contacto-vital-billetera";
+
+    const STORAGE_KEYS = {
+      ADVISORS: "cv_vitalcoins_advisors_v11",
+      TRANSACTIONS: "cv_vitalcoins_transactions_v11",
+      REDEMPTIONS: "cv_vitalcoins_redemptions_v11",
+      REWARDS: "cv_vitalcoins_rewards_v11",
+      SETTINGS: "cv_vitalcoins_settings_v11",
+      SESSION: "cv_vitalcoins_session_v11",
+    };
+
+    const CLOUD_COLLECTIONS = Object.freeze({
+      ADVISORS: "cv_advisors",
+      TRANSACTIONS: "cv_transactions",
+      REDEMPTIONS: "cv_redemptions",
+      REWARDS: "cv_rewards",
+      SETTINGS: "cv_settings",
+    });
+
+    const AUTHORIZED_ADMINS = Object.freeze({
+      "santiagonaranjo@contactovitalllc.com": {
+        id: "admin_santiago_naranjo",
+        name: "Santiago Naranjo",
+        email: "santiagonaranjo@contactovitalllc.com",
+        password: "santivital",
+        accountType: "admin",
+        role: "Administrador",
+        balance: "INFINITE",
+      },
+      "anapeña@contactovitalllc.com": {
+        id: "admin_ana_pena",
+        name: "Ana Peña",
+        email: "anapeña@contactovitalllc.com",
+        password: "anavital",
+        accountType: "admin",
+        role: "Administrador",
+        balance: "INFINITE",
+      },
+      "emanuelvillamil@contactovitalllc.com": {
+        id: "admin_emanuel_villamil",
+        name: "Emanuel Villamil",
+        email: "emanuelvillamil@contactovitalllc.com",
+        password: "emavital",
+        accountType: "admin",
+        role: "Administrador",
+        balance: "INFINITE",
+      },
+    });
+
+    const ADVISOR_ROLES = Object.freeze([
+      "Asesor grupo Daire",
+      "Asesor grupo David",
+      "Asesor grupo Armando y Camilo",
+    ]);
+
+    const DEFAULT_GROUP_GOALS = Object.freeze({
+      "Asesor grupo Daire": {
+        role: "Asesor grupo Daire",
+        title: "Meta Semanal — Asesor grupo Daire",
+        targetVc: 500000,
+        rewardLabel: "Bono y prioridad en recompensas del Grupo Daire",
+      },
+      "Asesor grupo David": {
+        role: "Asesor grupo David",
+        title: "Meta Semanal — Asesor grupo David",
+        targetVc: 500000,
+        rewardLabel: "Bono y prioridad en recompensas del Grupo David",
+      },
+      "Asesor grupo Armando y Camilo": {
+        role: "Asesor grupo Armando y Camilo",
+        title: "Meta Semanal — Asesor grupo Armando y Camilo",
+        targetVc: 500000,
+        rewardLabel: "Bono y prioridad en recompensas del Grupo Armando y Camilo",
+      },
+    });
+
+    const DEFAULT_METRICS = Object.freeze({
+      baseCodBeforeGoal: 10000,
+      baseCodAfterGoal: 22000,
+      baseInstantBeforeGoal: 18000,
+      baseInstantAfterGoal: 40000,
+      valueTier1Min: 250,
+      valueTier1Max: 299,
+      valueTier1Vc: 15000,
+      valueTier2Min: 300,
+      valueTier2Max: 349,
+      valueTier2Vc: 35000,
+      valueTier3Min: 350,
+      valueTier3Vc: 65000,
+      streak2Vc: 15000,
+      streak3Vc: 45000,
+      streak4Vc: 80000,
+      streak5PlusVc: 130000,
+      firstSaleDayVc: 8000,
+      noCancelledDayVc: 10000,
+      doubleDailyGoalVc: 35000,
+      tripleDailyGoalVc: 75000,
+      crossSellingVc: 8000,
+      goal3DaysStreakVc: 20000,
+      weeklyStreak4of5Vc: 50000,
+      weeklyStreak5of5Vc: 95000,
+      beatPrevWeekAvgVc: 25000,
+      monitoredCall100Vc: 8000,
+      weeklyQuality95MinPct: 95,
+      weeklyQuality95Vc: 45000,
+      teamDailyGoalVc: 15000,
+      podium1stVc: 80000,
+      podium2ndVc: 45000,
+      podium3rdVc: 25000,
+      qualityClauseMinPct: 80,
+    });
+
+    const DEFAULT_REWARDS = Object.freeze([
+      {
+        id: "rew_dia_libre",
+        title: "Medio Día Libre Remunerado",
+        description: "Disfruta de 4 horas libres aprobadas por monitoreo de calidad.",
+        category: "Tiempo Libre",
+        stock: 10,
+        active: true,
+        groupPrices: {
+          "Asesor grupo Daire": 120000,
+          "Asesor grupo David": 125000,
+          "Asesor grupo Armando y Camilo": 115000,
+        },
+      },
+      {
+        id: "rew_bono_almuerzo",
+        title: "Bono de Almuerzo Especial",
+        description: "Vale de comida en restaurante aliado o entrega a domicilio.",
+        category: "Gastronomía",
+        stock: 20,
+        active: true,
+        groupPrices: {
+          "Asesor grupo Daire": 65000,
+          "Asesor grupo David": 70000,
+          "Asesor grupo Armando y Camilo": 60000,
+        },
+      },
+      {
+        id: "rew_audifonos_pro",
+        title: "Audífonos Inalámbricos Pro",
+        description: "Audífonos inalámbricos de alta fidelidad con micrófono HD.",
+        category: "Tecnología",
+        stock: 8,
+        active: true,
+        groupPrices: {
+          "Asesor grupo Daire": 210000,
+          "Asesor grupo David": 200000,
+          "Asesor grupo Armando y Camilo": 220000,
+        },
+      },
+      {
+        id: "rew_kit_vital",
+        title: "Kit Ejecutivo Contacto Vital",
+        description: "Termo térmico, agenda ejecutiva y cargador portátil.",
+        category: "Accesorios",
+        stock: 15,
+        active: true,
+        groupPrices: {
+          "Asesor grupo Daire": 90000,
+          "Asesor grupo David": 85000,
+          "Asesor grupo Armando y Camilo": 95000,
+        },
+      },
+    ]);
+
+    const memoryStorage = new Map();
+
+    const uiState = {
+      authTab: "login",
+      adminFilterGroup: "ALL",
+      adminSearchQuery: "",
+      adminPage: 1,
+      adminPageSize: 15,
+      revealedPasswords: new Set(),
+      lastCalcBreakdown: null,
+      cloudActive: false,
+      cloudListenersStarted: false,
+    };
+
+    let dbInstance = null;
+    let authInstance = null;
+    let activeCloudUid = null;
+
+    function readLocal(key) {
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          const val = window.localStorage.getItem(key);
+          if (val !== null) return val;
+        }
+      } catch (_err) {}
+      return memoryStorage.has(key) ? memoryStorage.get(key) : null;
+    }
+
+    function writeLocal(key, value) {
+      const str = String(value);
+      memoryStorage.set(key, str);
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.setItem(key, str);
+          return true;
+        }
+      } catch (_err) {}
+      return false;
+    }
+
+    function removeLocal(key) {
+      memoryStorage.delete(key);
+      try {
+        if (typeof window !== "undefined" && window.localStorage) {
+          window.localStorage.removeItem(key);
+        }
+      } catch (_err) {}
+    }
+
+    function parseJsonSafe(raw, fallback) {
+      if (raw === null || raw === undefined || raw === "") return fallback;
+      try {
+        return JSON.parse(raw);
+      } catch (_err) {
+        return fallback;
+      }
+    }
+
+    function normalizeEmail(email) {
+      return String(email || "").trim().toLowerCase();
+    }
+
+    function normalizeAdvisorRole(role) {
+      const clean = String(role || "").trim();
+      if (ADVISOR_ROLES.includes(clean)) return clean;
+      const lower = clean.toLowerCase();
+      if (lower.includes("daire")) return "Asesor grupo Daire";
+      if (lower.includes("david")) return "Asesor grupo David";
+      if (lower.includes("armando") || lower.includes("camilo")) return "Asesor grupo Armando y Camilo";
+      return "Asesor grupo Daire";
+    }
+
+    function isAuthorizedAdminEmail(email) {
+      const clean = normalizeEmail(email);
+      return Boolean(clean && Object.prototype.hasOwnProperty.call(AUTHORIZED_ADMINS, clean));
+    }
+
+    function isAuthorizedAdmin(user) {
+      if (!user || typeof user !== "object") return false;
+      const email = normalizeEmail(user.email);
+      return isAuthorizedAdminEmail(email) && user.accountType === "admin" && user.role === "Administrador";
+    }
+
+    function formatVc(amount) {
+      if (amount === "INFINITE" || amount === Infinity) return "∞ VitalCoins";
+      const n = Number(amount);
+      if (!Number.isFinite(n)) return "0 VitalCoins";
+      return `${Math.round(n).toLocaleString("es-CO")} VitalCoins`;
+    }
+
+    function formatNumber(num) {
+      const n = Number(num);
+      if (!Number.isFinite(n)) return "0";
+      return Math.round(n).toLocaleString("es-CO");
+    }
+
+    function formatDateTime(isoStr) {
+      try {
+        const d = isoStr ? new Date(isoStr) : new Date();
+        if (Number.isNaN(d.getTime())) return "Reciente";
+        return d.toLocaleString("es-CO", {
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch (_err) {
+        return "Reciente";
+      }
+    }
+
+    function generateId(prefix = "cv") {
+      return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function showToast(message, type = "info") {
+      const container = document.getElementById("toast-container");
+      if (!container) return;
+      const styles = {
+        success: "bg-emerald-950/95 border-emerald-400/40 text-emerald-100",
+        error: "bg-rose-950/95 border-rose-400/40 text-rose-100",
+        warning: "bg-amber-950/95 border-amber-400/40 text-amber-100",
+        info: "bg-blue-950/95 border-cyan-400/40 text-cyan-100",
+      };
+      const toast = document.createElement("div");
+      toast.className = `pointer-events-auto rounded-2xl border px-4 py-3 shadow-2xl text-xs sm:text-sm font-medium flex items-center justify-between gap-3 transition-all duration-200 ${styles[type] || styles.info}`;
+      toast.innerHTML = `
+        <span class="leading-snug">${escapeHtml(message)}</span>
+        <button type="button" class="text-current/75 hover:text-current font-bold px-1 cursor-pointer" aria-label="Cerrar">✕</button>
+      `;
+      const removeToast = () => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-6px)";
+        setTimeout(() => toast.remove(), 180);
+      };
+      toast.querySelector("button")?.addEventListener("click", removeToast);
+      container.appendChild(toast);
+      setTimeout(removeToast, 4000);
+    }
+
+    function updateSyncBadge() {
+      const badge = document.getElementById("sync-status-badge");
+      const liveLabel = document.getElementById("live-sync-label");
+      const liveDot = document.getElementById("live-sync-dot");
+      const liveDetail = document.getElementById("live-sync-detail");
+      const count = getAdvisors().length;
+
+      if (uiState.cloudActive && activeCloudUid) {
+        if (badge) {
+          badge.textContent = `Sincronización en vivo · ${count} asesores`;
+          badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-400/30";
+        }
+        if (liveLabel) {
+          liveLabel.textContent = "Sincronización multi-dispositivo: Activa";
+          liveLabel.className = "font-semibold text-emerald-300";
+        }
+        if (liveDot) {
+          liveDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
+        }
+        if (liveDetail) {
+          liveDetail.textContent = `Conectado en tiempo real (${count} asesores en colección compartida).`;
+        }
+      } else {
+        if (badge) {
+          badge.textContent = `Modo local / respaldado · ${count} asesores`;
+          badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-400/25";
+        }
+        if (liveLabel) {
+          liveLabel.textContent = "Sincronización multi-dispositivo: Modo local";
+          liveLabel.className = "font-semibold text-slate-200";
+        }
+        if (liveDot) {
+          liveDot.className = "w-2.5 h-2.5 rounded-full bg-amber-400";
+        }
+        if (liveDetail) {
+          liveDetail.textContent = "Datos guardados localmente; configura USER_FIREBASE_CONFIG para sincronizar entre dispositivos en GitHub.";
+        }
+      }
+    }
+
+    function getSharedCollection(colName) {
+      if (!dbInstance || !activeCloudUid || !uiState.cloudActive) return null;
+      try {
+        return collection(dbInstance, "artifacts", APP_SLUG, "public", "data", colName);
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    function getSharedDoc(colName, docId) {
+      if (!dbInstance || !activeCloudUid || !uiState.cloudActive) return null;
+      try {
+        return doc(dbInstance, "artifacts", APP_SLUG, "public", "data", colName, String(docId));
+      } catch (_err) {
+        return null;
+      }
+    }
+
+    async function cloudUpsert(colName, docId, payload) {
+      if (!uiState.cloudActive || !activeCloudUid || !dbInstance) return;
+      try {
+        const ref = getSharedDoc(colName, docId);
+        if (ref) await setDoc(ref, payload, { merge: true });
+      } catch (_err) {}
+    }
+
+    async function cloudRemove(colName, docId) {
+      if (!uiState.cloudActive || !activeCloudUid || !dbInstance) return;
+      try {
+        const ref = getSharedDoc(colName, docId);
+        if (ref) await deleteDoc(ref);
+      } catch (_err) {}
+    }
+
+    function attachCloudListeners() {
+      if (uiState.cloudListenersStarted || !uiState.cloudActive || !activeCloudUid || !dbInstance) return;
+      uiState.cloudListenersStarted = true;
+      updateSyncBadge();
+
+      const advCol = getSharedCollection(CLOUD_COLLECTIONS.ADVISORS);
+      if (advCol) {
+        onSnapshot(advCol, (snap) => {
+          const cloudList = [];
+          snap.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (data && typeof data === "object") cloudList.push({ id: docSnap.id, ...data });
+          });
+          const localList = getAdvisors();
+          const mergedMap = new Map();
+          [...localList, ...cloudList].forEach((raw) => {
+            const clean = sanitizeAdvisorRecord(raw);
+            if (!clean) return;
+            const existing = mergedMap.get(clean.email);
+            if (!existing) {
+              mergedMap.set(clean.email, clean);
+            } else {
+              const prevTs = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+              const nextTs = new Date(clean.updatedAt || clean.createdAt || 0).getTime();
+              if (nextTs >= prevTs) mergedMap.set(clean.email, clean);
+            }
+          });
+          const sortedAdvisors = Array.from(mergedMap.values()).sort(
+            (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+          );
+          writeLocal(STORAGE_KEYS.ADVISORS, JSON.stringify(sortedAdvisors));
+          updateSyncBadge();
+          renderApp();
+        }, () => {
+          uiState.cloudActive = false;
+          updateSyncBadge();
+        });
+      }
+
+      const txCol = getSharedCollection(CLOUD_COLLECTIONS.TRANSACTIONS);
+      if (txCol) {
+        onSnapshot(txCol, (snap) => {
+          const cloudTxs = [];
+          snap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d && typeof d === "object") cloudTxs.push({ id: docSnap.id, ...d });
+          });
+          const localTxs = getTransactions();
+          const map = new Map();
+          [...localTxs, ...cloudTxs].forEach((t) => {
+            if (t && t.id) map.set(String(t.id), t);
+          });
+          const sorted = Array.from(map.values()).sort(
+            (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+          );
+          writeLocal(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(sorted));
+          renderApp();
+        });
+      }
+
+      const rewCol = getSharedCollection(CLOUD_COLLECTIONS.REWARDS);
+      if (rewCol) {
+        onSnapshot(rewCol, (snap) => {
+          if (snap.empty) return;
+          const list = [];
+          snap.forEach((docSnap) => list.push(normalizeReward(docSnap.data(), docSnap.id)));
+          writeLocal(STORAGE_KEYS.REWARDS, JSON.stringify(list));
+          renderApp();
+        });
+      }
+
+      const redCol = getSharedCollection(CLOUD_COLLECTIONS.REDEMPTIONS);
+      if (redCol) {
+        onSnapshot(redCol, (snap) => {
+          const list = [];
+          snap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (d && typeof d === "object") list.push({ id: docSnap.id, ...d });
+          });
+          list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+          writeLocal(STORAGE_KEYS.REDEMPTIONS, JSON.stringify(list));
+          renderApp();
+        });
+      }
+
+      const setCol = getSharedCollection(CLOUD_COLLECTIONS.SETTINGS);
+      if (setCol) {
+        onSnapshot(setCol, (snap) => {
+          const currentSettings = getSettings();
+          let changed = false;
+          snap.forEach((docSnap) => {
+            const d = docSnap.data();
+            if (!d || typeof d !== "object") return;
+            if (docSnap.id === "metrics") {
+              currentSettings.metrics = { ...DEFAULT_METRICS, ...d };
+              changed = true;
+            } else if (docSnap.id === "group_goals") {
+              currentSettings.groupGoals = sanitizeGroupGoals(d);
+              changed = true;
+            }
+          });
+          if (changed) {
+            writeLocal(STORAGE_KEYS.SETTINGS, JSON.stringify(currentSettings));
+            renderApp();
+          }
+        });
+      }
+    }
+
+    async function initFirebaseAndAuth() {
+      try {
+        if (!USER_FIREBASE_CONFIG || typeof USER_FIREBASE_CONFIG !== "object" || !USER_FIREBASE_CONFIG.apiKey) {
+          uiState.cloudActive = false;
+          updateSyncBadge();
+          return;
+        }
+        const app = initializeApp(USER_FIREBASE_CONFIG);
+        authInstance = getAuth(app);
+        dbInstance = getFirestore(app);
+
+        onAuthStateChanged(authInstance, (user) => {
+          if (user && user.uid) {
+            activeCloudUid = user.uid;
+            uiState.cloudActive = true;
+            updateSyncBadge();
+            attachCloudListeners();
+          } else {
+            activeCloudUid = null;
+            uiState.cloudActive = false;
+            updateSyncBadge();
+          }
+        });
+
+        await signInAnonymously(authInstance);
+      } catch (_err) {
+        uiState.cloudActive = false;
+        updateSyncBadge();
+      }
+    }
+
+    function createSeedAdvisors() {
+      const now = new Date().toISOString();
+      return [
+        {
+          id: "adv_laura_perez",
+          name: "Laura Pérez",
+          email: "lauraperez@gmail.com",
+          password: "1234",
+          accountType: "advisor",
+          role: "Asesor grupo Daire",
+          balance: 0,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ];
+    }
+
+    function createSeedTransactions() {
+      return [];
+    }
+
+    function createSeedRedemptions() {
+      return [];
+    }
+
+    function normalizeReward(raw, fallbackId = null) {
+      const obj = raw && typeof raw === "object" ? raw : {};
+      const basePrices = {
+        "Asesor grupo Daire": 100000,
+        "Asesor grupo David": 100000,
+        "Asesor grupo Armando y Camilo": 100000,
+      };
+      const rawPrices = obj.groupPrices && typeof obj.groupPrices === "object" ? obj.groupPrices : {};
+      const groupPrices = {};
+      ADVISOR_ROLES.forEach((grp) => {
+        const val = Number(rawPrices[grp] ?? obj.costVc ?? basePrices[grp]);
+        groupPrices[grp] = Number.isFinite(val) && val > 0 ? Math.round(val) : basePrices[grp];
+      });
+
+      return {
+        id: String(obj.id || fallbackId || generateId("rew")),
+        title: String(obj.title || "Recompensa Contacto Vital").trim(),
+        description: String(obj.description || "Beneficio disponible para canje con VitalCoins.").trim(),
+        category: String(obj.category || "Beneficio").trim(),
+        stock: Math.max(0, Math.round(Number(obj.stock ?? 10))),
+        active: obj.active !== false,
+        groupPrices,
+      };
+    }
+
+    function getRewardPriceForGroup(reward, groupRole) {
+      const r = normalizeReward(reward);
+      const grp = normalizeAdvisorRole(groupRole);
+      return Number(r.groupPrices[grp] ?? 100000);
+    }
+
+    function sanitizeGroupGoals(raw) {
+      const obj = raw && typeof raw === "object" ? raw : {};
+      const result = {};
+      ADVISOR_ROLES.forEach((role) => {
+        const def = DEFAULT_GROUP_GOALS[role];
+        const item = obj[role] && typeof obj[role] === "object" ? obj[role] : {};
+        const targetNum = Number(item.targetVc ?? def.targetVc);
+        result[role] = {
+          role,
+          title: String(item.title || def.title).trim(),
+          targetVc: Number.isFinite(targetNum) && targetNum > 0 ? Math.round(targetNum) : def.targetVc,
+          rewardLabel: String(item.rewardLabel || def.rewardLabel).trim(),
+        };
+      });
+      return result;
+    }
+
+    function sanitizeAdvisorRecord(raw) {
+      if (!raw || typeof raw !== "object") return null;
+      const email = normalizeEmail(raw.email);
+      if (!email || isAuthorizedAdminEmail(email)) return null;
+      const numBalance = Number(raw.balance);
+      const safeBalance = Number.isFinite(numBalance) && numBalance >= 0 ? Math.round(numBalance) : 0;
+      const createdAt = raw.createdAt || new Date().toISOString();
+      return {
+        id: String(raw.id || generateId("adv")),
+        name: String(raw.name || "Asesor").trim() || "Asesor",
+        email,
+        password: String(raw.password ?? "1234"),
+        accountType: "advisor",
+        role: normalizeAdvisorRole(raw.role),
+        balance: safeBalance,
+        createdAt,
+        updatedAt: raw.updatedAt || createdAt,
+      };
+    }
+
+    function getAdvisors() {
+      const raw = readLocal(STORAGE_KEYS.ADVISORS);
+      if (raw === null) {
+        const seed = createSeedAdvisors();
+        writeLocal(STORAGE_KEYS.ADVISORS, JSON.stringify(seed));
+        return seed;
+      }
+      const parsed = parseJsonSafe(raw, []);
+      if (!Array.isArray(parsed)) return createSeedAdvisors();
+      return parsed.map(sanitizeAdvisorRecord).filter(Boolean);
+    }
+
+    function saveAdvisors(list) {
+      const clean = (Array.isArray(list) ? list : []).map(sanitizeAdvisorRecord).filter(Boolean);
+      writeLocal(STORAGE_KEYS.ADVISORS, JSON.stringify(clean));
+      updateSyncBadge();
+      return clean;
+    }
+
+    function getTransactions() {
+      const raw = readLocal(STORAGE_KEYS.TRANSACTIONS);
+      if (raw === null) {
+        const seed = createSeedTransactions();
+        writeLocal(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(seed));
+        return seed;
+      }
+      const parsed = parseJsonSafe(raw, []);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    function saveTransactions(list) {
+      const clean = Array.isArray(list) ? list : [];
+      writeLocal(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(clean));
+      return clean;
+    }
+
+    function getRedemptions() {
+      const raw = readLocal(STORAGE_KEYS.REDEMPTIONS);
+      if (raw === null) {
+        const seed = createSeedRedemptions();
+        writeLocal(STORAGE_KEYS.REDEMPTIONS, JSON.stringify(seed));
+        return seed;
+      }
+      const parsed = parseJsonSafe(raw, []);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+
+    function saveRedemptions(list) {
+      const clean = Array.isArray(list) ? list : [];
+      writeLocal(STORAGE_KEYS.REDEMPTIONS, JSON.stringify(clean));
+      return clean;
+    }
+
+    function getRewards() {
+      const raw = readLocal(STORAGE_KEYS.REWARDS);
+      if (raw === null) {
+        const seed = DEFAULT_REWARDS.map((r) => normalizeReward(r));
+        writeLocal(STORAGE_KEYS.REWARDS, JSON.stringify(seed));
+        return seed;
+      }
+      const parsed = parseJsonSafe(raw, []);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        return DEFAULT_REWARDS.map((r) => normalizeReward(r));
+      }
+      return parsed.map((r) => normalizeReward(r));
+    }
+
+    function saveRewards(list) {
+      const clean = (Array.isArray(list) ? list : []).map((r) => normalizeReward(r));
+      writeLocal(STORAGE_KEYS.REWARDS, JSON.stringify(clean));
+      return clean;
+    }
+
+    function getSettings() {
+      const raw = readLocal(STORAGE_KEYS.SETTINGS);
+      const parsed = parseJsonSafe(raw, {});
+      return {
+        metrics: { ...DEFAULT_METRICS, ...(parsed.metrics && typeof parsed.metrics === "object" ? parsed.metrics : {}) },
+        groupGoals: sanitizeGroupGoals(parsed.groupGoals),
+      };
+    }
+
+    function saveSettings(settingsObj) {
+      const clean = {
+        metrics: { ...DEFAULT_METRICS, ...(settingsObj?.metrics || {}) },
+        groupGoals: sanitizeGroupGoals(settingsObj?.groupGoals),
+      };
+      writeLocal(STORAGE_KEYS.SETTINGS, JSON.stringify(clean));
+      return clean;
+    }
+
+    function getCurrentSession() {
+      const raw = readLocal(STORAGE_KEYS.SESSION);
+      const session = parseJsonSafe(raw, null);
+      if (!session || typeof session !== "object") return null;
+
+      if (session.accountType === "admin") {
+        const email = normalizeEmail(session.email);
+        if (!isAuthorizedAdminEmail(email)) {
+          clearSession();
+          return null;
+        }
+        const adminDef = AUTHORIZED_ADMINS[email];
+        return {
+          id: adminDef.id,
+          name: adminDef.name,
+          email: adminDef.email,
+          accountType: "admin",
+          role: "Administrador",
+          balance: "INFINITE",
+        };
+      }
+
+      const advisors = getAdvisors();
+      const found = advisors.find(
+        (a) => normalizeEmail(a.email) === normalizeEmail(session.email) || a.id === session.id
+      );
+      if (!found) return null;
+      return {
+        id: found.id,
+        name: found.name,
+        email: found.email,
+        accountType: "advisor",
+        role: normalizeAdvisorRole(found.role),
+        balance: Number(found.balance) || 0,
+      };
+    }
+
+    function setSession(userObj) {
+      if (!userObj) return;
+      if (isAuthorizedAdmin(userObj)) {
+        const email = normalizeEmail(userObj.email);
+        const adminDef = AUTHORIZED_ADMINS[email];
+        writeLocal(
+          STORAGE_KEYS.SESSION,
+          JSON.stringify({
+            id: adminDef.id,
+            name: adminDef.name,
+            email: adminDef.email,
+            accountType: "admin",
+            role: "Administrador",
+            balance: "INFINITE",
+          })
+        );
+        return;
+      }
+      writeLocal(
+        STORAGE_KEYS.SESSION,
+        JSON.stringify({
+          id: userObj.id,
+          name: userObj.name,
+          email: normalizeEmail(userObj.email),
+          accountType: "advisor",
+          role: normalizeAdvisorRole(userObj.role),
+          balance: Number(userObj.balance) || 0,
+        })
+      );
+    }
+
+    function clearSession() {
+      removeLocal(STORAGE_KEYS.SESSION);
+    }
+
+    function resetDemoData() {
+      const advisors = createSeedAdvisors();
+      const transactions = createSeedTransactions();
+      const redemptions = createSeedRedemptions();
+      const rewards = DEFAULT_REWARDS.map((r) => normalizeReward(r));
+      const settings = saveSettings({
+        metrics: { ...DEFAULT_METRICS },
+        groupGoals: sanitizeGroupGoals(DEFAULT_GROUP_GOALS),
+      });
+
+      saveAdvisors(advisors);
+      saveTransactions(transactions);
+      saveRedemptions(redemptions);
+      saveRewards(rewards);
+
+      const currentSession = getCurrentSession();
+      if (currentSession && currentSession.accountType === "advisor") {
+        const updatedAdvisor = advisors.find((a) => normalizeEmail(a.email) === normalizeEmail(currentSession.email));
+        if (updatedAdvisor) {
+          setSession(updatedAdvisor);
+        } else {
+          clearSession();
+        }
+      }
+
+      if (uiState.cloudActive && activeCloudUid) {
+        advisors.forEach((a) => cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, a.id, a));
+        rewards.forEach((r) => cloudUpsert(CLOUD_COLLECTIONS.REWARDS, r.id, r));
+        cloudUpsert(CLOUD_COLLECTIONS.SETTINGS, "metrics", settings.metrics);
+        cloudUpsert(CLOUD_COLLECTIONS.SETTINGS, "group_goals", settings.groupGoals);
+      }
+
+      uiState.adminPage = 1;
+      showToast("Datos de demostración restaurados correctamente.", "success");
+      renderApp();
+    }
+
+    // =========================================================================
+    // CALCULADORA DEL SISTEMA DE VITALCOINS SEMANALES
+    // =========================================================================
+
+    function calculateWeeklyVitalCoins(input, metricsInput) {
+      const m = { ...DEFAULT_METRICS, ...(metricsInput || {}) };
+      const qualityPct = Math.max(0, Math.min(100, Number(input.qualityPct ?? 100)));
+      const minQuality = Number(m.qualityClauseMinPct ?? 80);
+      const qualityClauseFailed = qualityPct < minQuality;
+
+      const codBeforeGoal = Math.max(0, Math.round(Number(input.codBeforeGoal ?? 0)));
+      const codAfterGoal = Math.max(0, Math.round(Number(input.codAfterGoal ?? 0)));
+      const instantBeforeGoal = Math.max(0, Math.round(Number(input.instantBeforeGoal ?? 0)));
+      const instantAfterGoal = Math.max(0, Math.round(Number(input.instantAfterGoal ?? 0)));
+
+      const vCodBefore = codBeforeGoal * Number(m.baseCodBeforeGoal);
+      const vCodAfter = codAfterGoal * Number(m.baseCodAfterGoal);
+      const vInstBefore = instantBeforeGoal * Number(m.baseInstantBeforeGoal);
+      const vInstAfter = instantAfterGoal * Number(m.baseInstantAfterGoal);
+
+      const salesValue = Math.max(0, Number(input.salesValue ?? 0));
+      let valueBonusVc = 0;
+      let valueTierLabel = "Sin bono por valor";
+      if (salesValue >= Number(m.valueTier3Min)) {
+        valueBonusVc = Number(m.valueTier3Vc);
+        valueTierLabel = `Tramo ≥ $${m.valueTier3Min}`;
+      } else if (salesValue >= Number(m.valueTier2Min) && salesValue <= Number(m.valueTier2Max)) {
+        valueBonusVc = Number(m.valueTier2Vc);
+        valueTierLabel = `Tramo $${m.valueTier2Min}-$${m.valueTier2Max}`;
+      } else if (salesValue >= Number(m.valueTier1Min) && salesValue <= Number(m.valueTier1Max)) {
+        valueBonusVc = Number(m.valueTier1Vc);
+        valueTierLabel = `Tramo $${m.valueTier1Min}-$${m.valueTier1Max}`;
+      }
+
+      const streakSales = Math.max(0, Math.round(Number(input.streakSales ?? 0)));
+      let streakBonusVc = 0;
+      let streakLabel = "Sin racha de ventas";
+      if (streakSales >= 5) {
+        streakBonusVc = Number(m.streak5PlusVc);
+        streakLabel = "Racha 5+ ventas seguidas";
+      } else if (streakSales === 4) {
+        streakBonusVc = Number(m.streak4Vc);
+        streakLabel = "Racha 4 ventas seguidas";
+      } else if (streakSales === 3) {
+        streakBonusVc = Number(m.streak3Vc);
+        streakLabel = "Racha 3 ventas seguidas";
+      } else if (streakSales === 2) {
+        streakBonusVc = Number(m.streak2Vc);
+        streakLabel = "Racha 2 ventas seguidas";
+      }
+
+      const firstSaleDayCount = Math.max(0, Math.round(Number(input.firstSaleDayCount ?? 0)));
+      const noCancelledDayCount = Math.max(0, Math.round(Number(input.noCancelledDayCount ?? 0)));
+      const doubleDailyGoalCount = Math.max(0, Math.round(Number(input.doubleDailyGoalCount ?? 0)));
+      const tripleDailyGoalCount = Math.max(0, Math.round(Number(input.tripleDailyGoalCount ?? 0)));
+      const crossSellingCount = Math.max(0, Math.round(Number(input.crossSellingCount ?? 0)));
+      const monitoredCall100Count = Math.max(0, Math.round(Number(input.monitoredCall100Count ?? 0)));
+      const teamDailyGoalCount = Math.max(0, Math.round(Number(input.teamDailyGoalCount ?? 0)));
+
+      const vFirstSale = firstSaleDayCount * Number(m.firstSaleDayVc);
+      const vNoCancel = noCancelledDayCount * Number(m.noCancelledDayVc);
+      const vDoubleGoal = doubleDailyGoalCount * Number(m.doubleDailyGoalVc);
+      const vTripleGoal = tripleDailyGoalCount * Number(m.tripleDailyGoalVc);
+      const vCrossSell = crossSellingCount * Number(m.crossSellingVc);
+      const vMonitored100 = monitoredCall100Count * Number(m.monitoredCall100Vc);
+      const vTeamGoal = teamDailyGoalCount * Number(m.teamDailyGoalVc);
+
+      let consistencyBonusVc = 0;
+      let consistencyLabel = "Sin bono de consistencia";
+      if (input.weeklyStreak5of5) {
+        consistencyBonusVc = Number(m.weeklyStreak5of5Vc);
+        consistencyLabel = "Meta diaria 5/5 días";
+      } else if (input.weeklyStreak4of5) {
+        consistencyBonusVc = Number(m.weeklyStreak4of5Vc);
+        consistencyLabel = "Meta diaria 4/5 días";
+      } else if (input.goal3DaysStreak) {
+        consistencyBonusVc = Number(m.goal3DaysStreakVc);
+        consistencyLabel = "Racha 3 días cumpliendo meta";
+      }
+
+      const vBeatPrevWeek = input.beatPrevWeekAvg ? Number(m.beatPrevWeekAvgVc) : 0;
+      const vWeeklyQuality95 =
+        qualityPct >= Number(m.weeklyQuality95MinPct || 95) ? Number(m.weeklyQuality95Vc) : 0;
+
+      let podiumBonusVc = 0;
+      let podiumLabel = "Sin podio semanal";
+      if (input.podiumRank === "1") {
+        podiumBonusVc = Number(m.podium1stVc);
+        podiumLabel = "1.er Lugar Podio Semanal";
+      } else if (input.podiumRank === "2") {
+        podiumBonusVc = Number(m.podium2ndVc);
+        podiumLabel = "2.do Lugar Podio Semanal";
+      } else if (input.podiumRank === "3") {
+        podiumBonusVc = Number(m.podium3rdVc);
+        podiumLabel = "3.er Lugar Podio Semanal";
+      }
+
+      const lines = [
+        { label: `Ventas COD antes de meta (${codBeforeGoal})`, vc: vCodBefore },
+        { label: `Ventas COD después de meta (${codAfterGoal})`, vc: vCodAfter },
+        { label: `Ventas Pago Inmediato antes de meta (${instantBeforeGoal})`, vc: vInstBefore },
+        { label: `Ventas Pago Inmediato después de meta (${instantAfterGoal})`, vc: vInstAfter },
+        { label: `Bono por valor (${valueTierLabel})`, vc: valueBonusVc },
+        { label: `Racha consecutiva (${streakLabel})`, vc: streakBonusVc },
+        { label: `1.ª venta del día (${firstSaleDayCount} días)`, vc: vFirstSale },
+        { label: `Día sin cancelaciones (${noCancelledDayCount} días)`, vc: vNoCancel },
+        { label: `Doble meta diaria (${doubleDailyGoalCount} días)`, vc: vDoubleGoal },
+        { label: `Triple meta diaria (${tripleDailyGoalCount} días)`, vc: vTripleGoal },
+        { label: `Venta cruzada / Upselling (${crossSellingCount})`, vc: vCrossSell },
+        { label: `Consistencia semanal (${consistencyLabel})`, vc: consistencyBonusVc },
+        { label: `Superar promedio semana anterior`, vc: vBeatPrevWeek },
+        { label: `Llamada monitoreada al 100% (${monitoredCall100Count})`, vc: vMonitored100 },
+        { label: `Calidad semanal ≥ ${m.weeklyQuality95MinPct || 95}%`, vc: vWeeklyQuality95 },
+        { label: `Meta grupal diaria cumplida (${teamDailyGoalCount} días)`, vc: vTeamGoal },
+        { label: `Podio semanal (${podiumLabel})`, vc: podiumBonusVc },
+      ];
+
+      const grossVc = lines.reduce((acc, item) => acc + item.vc, 0);
+      const finalVc = qualityClauseFailed ? 0 : grossVc;
+
+      return {
+        qualityPct,
+        minQuality,
+        qualityClauseFailed,
+        grossVc,
+        finalVc,
+        lines,
+      };
+    }
+
+    // =========================================================================
+    // OPERACIONES DE NEGOCIO (TRANSFERENCIAS, CANJES, RECOMPENSAS Y AJUSTES)
+    // =========================================================================
+
+    function transferVitalCoins({ senderSession, recipientAdvisorId, amount, note }) {
+      const amt = Math.round(Number(amount));
+      if (!Number.isFinite(amt) || amt <= 0) {
+        return { ok: false, error: "Ingresa una cantidad válida mayor a 0 VitalCoins." };
+      }
+      const cleanNote = String(note || "").trim();
+      if (!cleanNote) {
+        return { ok: false, error: "Escribe un motivo o concepto para el movimiento." };
+      }
+
+      const advisors = getAdvisors();
+      const recipientIdx = advisors.findIndex((a) => a.id === recipientAdvisorId);
+      if (recipientIdx === -1) {
+        return { ok: false, error: "Selecciona un asesor destinatario válido." };
+      }
+
+      const now = new Date().toISOString();
+      const recipient = advisors[recipientIdx];
+      const newRecipientBalance = (Number(recipient.balance) || 0) + amt;
+
+      if (isAuthorizedAdmin(senderSession)) {
+        const updatedRecipient = { ...recipient, balance: newRecipientBalance, updatedAt: now };
+        advisors[recipientIdx] = updatedRecipient;
+        saveAdvisors(advisors);
+
+        const tx = {
+          id: generateId("tx"),
+          type: "ADMIN_GRANT",
+          senderId: senderSession.id,
+          senderName: senderSession.name,
+          senderRole: "Administrador",
+          recipientId: updatedRecipient.id,
+          recipientName: updatedRecipient.name,
+          recipientRole: updatedRecipient.role,
+          amount: amt,
+          note: cleanNote,
+          createdAt: now,
+        };
+        const txs = [tx, ...getTransactions()];
+        saveTransactions(txs);
+
+        if (uiState.cloudActive && activeCloudUid) {
+          cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, updatedRecipient.id, updatedRecipient);
+          cloudUpsert(CLOUD_COLLECTIONS.TRANSACTIONS, tx.id, tx);
+        }
+
+        return { ok: true, tx, newRecipientBalance };
+      }
+
+      const senderIdx = advisors.findIndex(
+        (a) => a.id === senderSession.id || normalizeEmail(a.email) === normalizeEmail(senderSession.email)
+      );
+      if (senderIdx === -1) {
+        return { ok: false, error: "No se encontró la cuenta del asesor remitente." };
+      }
+      const sender = advisors[senderIdx];
+      if (sender.id === recipient.id) {
+        return { ok: false, error: "No puedes enviarte VitalCoins a tu propia cuenta." };
+      }
+      const senderBalance = Number(sender.balance) || 0;
+      if (senderBalance < amt) {
+        return {
+          ok: false,
+          error: `Saldo insuficiente. Tienes ${formatVc(senderBalance)} y necesitas ${formatVc(amt)}.`,
+        };
+      }
+
+      const newSenderBalance = senderBalance - amt;
+      const updatedSender = { ...sender, balance: newSenderBalance, updatedAt: now };
+      const updatedRecipient = { ...recipient, balance: newRecipientBalance, updatedAt: now };
+
+      advisors[senderIdx] = updatedSender;
+      advisors[recipientIdx] = updatedRecipient;
+      saveAdvisors(advisors);
+
+      const tx = {
+        id: generateId("tx"),
+        type: "P2P_TRANSFER",
+        senderId: updatedSender.id,
+        senderName: updatedSender.name,
+        senderRole: updatedSender.role,
+        recipientId: updatedRecipient.id,
+        recipientName: updatedRecipient.name,
+        recipientRole: updatedRecipient.role,
+        amount: amt,
+        note: cleanNote,
+        createdAt: now,
+      };
+      const txs = [tx, ...getTransactions()];
+      saveTransactions(txs);
+
+      setSession(updatedSender);
+
+      if (uiState.cloudActive && activeCloudUid) {
+        cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, updatedSender.id, updatedSender);
+        cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, updatedRecipient.id, updatedRecipient);
+        cloudUpsert(CLOUD_COLLECTIONS.TRANSACTIONS, tx.id, tx);
+      }
+
+      return { ok: true, tx, newSenderBalance, newRecipientBalance };
+    }
+
+    function redeemReward(advisorSession, rewardId) {
+      const advisors = getAdvisors();
+      const advIdx = advisors.findIndex(
+        (a) => a.id === advisorSession.id || normalizeEmail(a.email) === normalizeEmail(advisorSession.email)
+      );
+      if (advIdx === -1) {
+        return { ok: false, error: "Cuenta de asesor no encontrada." };
+      }
+      const advisor = advisors[advIdx];
+      const advisorGroup = normalizeAdvisorRole(advisor.role);
+
+      const rewards = getRewards();
+      const rewIdx = rewards.findIndex((r) => r.id === rewardId);
+      if (rewIdx === -1) {
+        return { ok: false, error: "La recompensa seleccionada no existe." };
+      }
+      const reward = normalizeReward(rewards[rewIdx]);
+      if (!reward.active) {
+        return { ok: false, error: "Esta recompensa no está activa en este momento." };
+      }
+      if (reward.stock <= 0) {
+        return { ok: false, error: "No quedan unidades disponibles de esta recompensa." };
+      }
+
+      const costVc = getRewardPriceForGroup(reward, advisorGroup);
+      const currentBalance = Number(advisor.balance) || 0;
+      if (currentBalance < costVc) {
+        return {
+          ok: false,
+          error: `Te faltan ${formatVc(costVc - currentBalance)} para canjear "${reward.title}" en ${advisorGroup}.`,
+        };
+      }
+
+      const now = new Date().toISOString();
+      const newBalance = currentBalance - costVc;
+      const updatedAdvisor = { ...advisor, balance: newBalance, updatedAt: now };
+      const updatedReward = { ...reward, stock: reward.stock - 1 };
+
+      advisors[advIdx] = updatedAdvisor;
+      rewards[rewIdx] = updatedReward;
+      saveAdvisors(advisors);
+      saveRewards(rewards);
+
+      const redemption = {
+        id: generateId("red"),
+        advisorId: updatedAdvisor.id,
+        advisorName: updatedAdvisor.name,
+        advisorEmail: updatedAdvisor.email,
+        advisorGroup,
+        rewardId: updatedReward.id,
+        rewardTitle: updatedReward.title,
+        costVc,
+        status: "Pendiente de entrega",
+        createdAt: now,
+      };
+      const redemptions = [redemption, ...getRedemptions()];
+      saveRedemptions(redemptions);
+
+      const tx = {
+        id: generateId("tx"),
+        type: "REWARD_REDEMPTION",
+        senderId: updatedAdvisor.id,
+        senderName: updatedAdvisor.name,
+        senderRole: advisorGroup,
+        recipientId: "REWARD_STORE",
+        recipientName: updatedReward.title,
+        recipientRole: `Canje (${advisorGroup})`,
+        amount: costVc,
+        note: `Canje de recompensa: ${updatedReward.title} (${advisorGroup})`,
+        createdAt: now,
+      };
+      const txs = [tx, ...getTransactions()];
+      saveTransactions(txs);
+
+      setSession(updatedAdvisor);
+
+      if (uiState.cloudActive && activeCloudUid) {
+        cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, updatedAdvisor.id, updatedAdvisor);
+        cloudUpsert(CLOUD_COLLECTIONS.REWARDS, updatedReward.id, updatedReward);
+        cloudUpsert(CLOUD_COLLECTIONS.REDEMPTIONS, redemption.id, redemption);
+        cloudUpsert(CLOUD_COLLECTIONS.TRANSACTIONS, tx.id, tx);
+      }
+
+      return { ok: true, redemption, newBalance };
+    }
+
+    function adjustAdvisorBalanceByAdmin(adminSession, advisorId, newBalanceRaw, reason) {
+      if (!isAuthorizedAdmin(adminSession)) {
+        return { ok: false, error: "Acceso denegado: solo administradores autorizados." };
+      }
+      const targetBalance = Math.round(Number(newBalanceRaw));
+      if (!Number.isFinite(targetBalance) || targetBalance < 0) {
+        return { ok: false, error: "El nuevo saldo debe ser un número entero mayor o igual a 0." };
+      }
+      const cleanReason = String(reason || "").trim() || "Ajuste directo de saldo por administración";
+
+      const advisors = getAdvisors();
+      const idx = advisors.findIndex((a) => a.id === advisorId);
+      if (idx === -1) {
+        return { ok: false, error: "Asesor no encontrado." };
+      }
+
+      const adv = advisors[idx];
+      const prevBalance = Number(adv.balance) || 0;
+      const diff = targetBalance - prevBalance;
+      const now = new Date().toISOString();
+
+      const updatedAdv = { ...adv, balance: targetBalance, updatedAt: now };
+      advisors[idx] = updatedAdv;
+      saveAdvisors(advisors);
+
+      const tx = {
+        id: generateId("tx"),
+        type: "ADMIN_ADJUSTMENT",
+        senderId: adminSession.id,
+        senderName: adminSession.name,
+        senderRole: "Administrador",
+        recipientId: updatedAdv.id,
+        recipientName: updatedAdv.name,
+        recipientRole: updatedAdv.role,
+        amount: Math.abs(diff),
+        delta: diff,
+        previousBalance: prevBalance,
+        newBalance: targetBalance,
+        note: `${cleanReason} (${formatVc(prevBalance)} → ${formatVc(targetBalance)})`,
+        createdAt: now,
+      };
+      const txs = [tx, ...getTransactions()];
+      saveTransactions(txs);
+
+      if (uiState.cloudActive && activeCloudUid) {
+        cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, updatedAdv.id, updatedAdv);
+        cloudUpsert(CLOUD_COLLECTIONS.TRANSACTIONS, tx.id, tx);
+      }
+
+      return { ok: true, updatedAdv, diff };
+    }
+
+    function deleteAdvisorByAdmin(adminSession, advisorId) {
+      if (!isAuthorizedAdmin(adminSession)) {
+        return { ok: false, error: "Acceso denegado: solo administradores autorizados." };
+      }
+      const advisors = getAdvisors();
+      const target = advisors.find((a) => a.id === advisorId);
+      if (!target) {
+        return { ok: false, error: "Asesor no encontrado." };
+      }
+      const filtered = advisors.filter((a) => a.id !== advisorId);
+      saveAdvisors(filtered);
+
+      if (uiState.cloudActive && activeCloudUid) {
+        cloudRemove(CLOUD_COLLECTIONS.ADVISORS, target.id);
+      }
+
+      const session = getCurrentSession();
+      if (session && session.accountType === "advisor" && session.id === advisorId) {
+        clearSession();
+      }
+      return { ok: true, deletedName: target.name };
+    }
+
+    function registerAdvisorAccount({ name, email, password, role }) {
+      const cleanName = String(name || "").trim();
+      const cleanEmail = normalizeEmail(email);
+      const cleanPassword = String(password || "");
+      const cleanRole = normalizeAdvisorRole(role);
+
+      if (!cleanName || cleanName.length < 2) {
+        return { ok: false, error: "Ingresa tu nombre completo." };
+      }
+      if (!cleanEmail || !cleanEmail.includes("@")) {
+        return { ok: false, error: "Ingresa un correo electrónico válido." };
+      }
+      if (isAuthorizedAdminEmail(cleanEmail)) {
+        return {
+          ok: false,
+          error: "Ese correo pertenece a una cuenta administrativa reservada. El registro público es exclusivo para asesores.",
+        };
+      }
+      if (cleanPassword.length < 4) {
+        return { ok: false, error: "La contraseña debe tener al menos 4 caracteres." };
+      }
+      if (!ADVISOR_ROLES.includes(cleanRole)) {
+        return { ok: false, error: "Selecciona uno de los 3 grupos de asesor válidos." };
+      }
+
+      const advisors = getAdvisors();
+      const exists = advisors.some((a) => normalizeEmail(a.email) === cleanEmail);
+      if (exists) {
+        return { ok: false, error: "Ya existe una cuenta de asesor registrada con ese correo." };
+      }
+
+      const now = new Date().toISOString();
+      const newAdvisor = {
+        id: generateId("adv"),
+        name: cleanName,
+        email: cleanEmail,
+        password: cleanPassword,
+        accountType: "advisor",
+        role: cleanRole,
+        balance: 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const updatedList = [newAdvisor, ...advisors];
+      saveAdvisors(updatedList);
+      setSession(newAdvisor);
+
+      if (uiState.cloudActive && activeCloudUid) {
+        cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, newAdvisor.id, newAdvisor);
+      }
+
+      return { ok: true, advisor: newAdvisor };
+    }
+
+    function loginUser(emailRaw, passwordRaw) {
+      const email = normalizeEmail(emailRaw);
+      const password = String(passwordRaw ?? "").trim();
+
+      if (!email || !password) {
+        return { ok: false, error: "Ingresa tu correo y contraseña." };
+      }
+
+      if (isAuthorizedAdminEmail(email)) {
+        const adminDef = AUTHORIZED_ADMINS[email];
+        if (password !== String(adminDef.password).trim()) {
+          return { ok: false, error: "Credenciales de administrador incorrectas." };
+        }
+        const adminSession = {
+          id: adminDef.id,
+          name: adminDef.name,
+          email: adminDef.email,
+          accountType: "admin",
+          role: "Administrador",
+          balance: "INFINITE",
+        };
+        setSession(adminSession);
+        return { ok: true, user: adminSession };
+      }
+
+      const advisors = getAdvisors();
+      const advisor = advisors.find((a) => normalizeEmail(a.email) === email);
+      if (!advisor) {
+        return { ok: false, error: "No existe una cuenta registrada con ese correo." };
+      }
+      if (password !== String(advisor.password ?? "").trim()) {
+        return { ok: false, error: "Contraseña incorrecta." };
+      }
+
+      const advisorSession = {
+        id: advisor.id,
+        name: advisor.name,
+        email: advisor.email,
+        accountType: "advisor",
+        role: normalizeAdvisorRole(advisor.role),
+        balance: Number(advisor.balance) || 0,
+      };
+      setSession(advisorSession);
+      return { ok: true, user: advisorSession };
+    }
+
+    // =========================================================================
+    // RENDERIZADO DE INTERFAZ
+    // =========================================================================
+
+    function renderHeader(session) {
+      const area = document.getElementById("header-session-area");
+      if (!area) return;
+
+      if (!session) {
+        area.innerHTML = `
+          <span class="hidden md:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-800/90 text-slate-300 border border-slate-700/80">
+            Sesión no iniciada
+          </span>
+        `;
+        return;
+      }
+
+      const isAdmin = isAuthorizedAdmin(session);
+      const badgeText = isAdmin ? "∞ VitalCoins" : formatVc(session.balance);
+      const roleText = isAdmin ? "Administrador" : session.role;
+
+      area.innerHTML = `
+        <div class="hidden sm:flex flex-col items-end leading-tight">
+          <span class="text-xs font-bold text-white">${escapeHtml(session.name)}</span>
+          <span class="text-[11px] text-cyan-300">${escapeHtml(roleText)}</span>
+        </div>
+        <div class="px-3 py-1.5 rounded-xl bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-xs font-extrabold whitespace-nowrap">
+          ${escapeHtml(badgeText)}
+        </div>
+        <button id="logout-btn" type="button" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800/90 hover:bg-rose-950/80 text-slate-200 hover:text-rose-200 border border-slate-700 hover:border-rose-500/40 transition cursor-pointer">
+          Cerrar sesión
+        </button>
+      `;
+
+      document.getElementById("logout-btn")?.addEventListener("click", () => {
+        clearSession();
+        uiState.revealedPasswords.clear();
+        showToast("Sesión cerrada.", "info");
+        renderApp();
+      });
+    }
+
+    function renderAuthScreen() {
+      const isLogin = uiState.authTab === "login";
+      return `
+        <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-7 glass-navy rounded-3xl p-6 sm:p-8">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-400/25 mb-4">
+              Contacto Vital • Billetera Digital de Puntos
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+              Sistema de VitalCoins Semanales y Canje de Recompensas
+            </h1>
+            <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+              Consulta tu saldo de <strong class="text-white">VitalCoins</strong>, transfiere puntos entre asesores, calcula bonificaciones semanales con la <strong class="text-amber-300">Cláusula de Calidad (≥ 80%)</strong> y canjea recompensas según tu grupo.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+              <div class="glass-subtle rounded-2xl p-4">
+                <p class="text-[11px] uppercase tracking-wider text-cyan-300 font-bold">Grupos de Asesores</p>
+                <p class="text-sm font-bold text-white mt-1">3 Equipos Activos</p>
+                <p class="text-xs text-slate-400 mt-1">Daire · David · Armando y Camilo</p>
+              </div>
+              <div class="glass-subtle rounded-2xl p-4">
+                <p class="text-[11px] uppercase tracking-wider text-emerald-300 font-bold">Cláusula de Calidad</p>
+                <p class="text-sm font-bold text-white mt-1">Mínimo 80%</p>
+                <p class="text-xs text-slate-400 mt-1">Debajo de 80% anula VitalCoins semanales</p>
+              </div>
+              <div class="glass-subtle rounded-2xl p-4">
+                <p class="text-[11px] uppercase tracking-wider text-amber-300 font-bold">Cuenta Demo Asesora</p>
+                <p class="text-sm font-bold text-white mt-1">Laura Pérez</p>
+                <p class="text-xs text-slate-400 mt-1">lauraperez@gmail.com / 1234</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 glass-navy rounded-3xl p-6 sm:p-7">
+            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-2xl bg-slate-950/80 border border-slate-800 mb-6">
+              <button id="tab-login-btn" type="button" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                isLogin ? "bg-cyan-500 text-slate-950 shadow" : "text-slate-300 hover:text-white"
+              }">
+                Iniciar sesión
+              </button>
+              <button id="tab-register-btn" type="button" class="py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                !isLogin ? "bg-cyan-500 text-slate-950 shadow" : "text-slate-300 hover:text-white"
+              }">
+                Registrarse (Asesor)
+              </button>
+            </div>
+
+            ${
+              isLogin
+                ? `
+              <form id="login-form" class="space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Correo electrónico</label>
+                  <input id="login-email" type="email" required placeholder="tu.correo@ejemplo.com" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contraseña</label>
+                  <input id="login-password" type="password" required placeholder="••••••••" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-bold text-sm shadow-lg shadow-cyan-950/60 transition cursor-pointer">
+                  Entrar a mi billetera
+                </button>
+              </form>
+            `
+                : `
+              <form id="register-form" class="space-y-3.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nombre completo</label>
+                  <input id="reg-name" type="text" required placeholder="Ej. Carlos Mendoza" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Correo electrónico</label>
+                  <input id="reg-email" type="email" required placeholder="asesor@correo.com" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Grupo de asesor</label>
+                  <select id="reg-role" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white">
+                    ${ADVISOR_ROLES.map((r) => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("")}
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contraseña (mín. 4 caracteres)</label>
+                  <input id="reg-password" type="password" required minlength="4" placeholder="Crea una contraseña" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-500 hover:from-emerald-500 hover:to-cyan-400 text-white font-bold text-sm shadow-lg shadow-emerald-950/60 transition cursor-pointer">
+                  Crear cuenta de asesor
+                </button>
+              </form>
+            `
+            }
+          </div>
+        </div>
+      `;
+    }
+
+    function renderWeeklyCalculatorSection(metrics, title = "Calculadora del Sistema de VitalCoins Semanales") {
+      const calc = uiState.lastCalcBreakdown || calculateWeeklyVitalCoins({ qualityPct: 100 }, metrics);
+      return `
+        <section class="glass-navy rounded-3xl p-6 sm:p-7">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-lg sm:text-xl font-extrabold text-white">${escapeHtml(title)}</h2>
+              <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
+                Si la calidad semanal es menor al <strong class="text-amber-300">${escapeHtml(metrics.qualityClauseMinPct ?? 80)}%</strong>, el total semanal se anula a 0 VitalCoins.
+              </p>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-300 border border-amber-400/30">
+              Cláusula de Calidad: ≥ ${escapeHtml(metrics.qualityClauseMinPct ?? 80)}%
+            </span>
+          </div>
+
+          <form id="weekly-calc-form" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-cyan-200 mb-1">Calidad semanal (%)</label>
+                <input name="qualityPct" type="number" step="0.1" min="0" max="100" value="${escapeHtml(calc.qualityPct)}" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Valor promedio / ticket venta ($)</label>
+                <input name="salesValue" type="number" min="0" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">COD antes de meta (#)</label>
+                <input name="codBeforeGoal" type="number" min="0" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">COD después de meta (#)</label>
+                <input name="codAfterGoal" type="number" min="0" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Pago Inmediato antes de meta (#)</label>
+                <input name="instantBeforeGoal" type="number" min="0" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Pago Inmediato después de meta (#)</label>
+                <input name="instantAfterGoal" type="number" min="0" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Racha ventas seguidas (#)</label>
+                <input name="streakSales" type="number" min="0" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white" />
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Días con 1.ª venta / sin cancelaciones</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <input name="firstSaleDayCount" type="number" min="0" placeholder="1.ª venta" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-2.5 py-2 text-xs text-white" />
+                  <input name="noCancelledDayCount" type="number" min="0" placeholder="Sin cancel." value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-2.5 py-2 text-xs text-white" />
+                </div>
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Doble / Triple meta diaria (días)</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <input name="doubleDailyGoalCount" type="number" min="0" placeholder="Doble" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-2.5 py-2 text-xs text-white" />
+                  <input name="tripleDailyGoalCount" type="number" min="0" placeholder="Triple" value="0" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-2.5 py-2 text-xs text-white" />
+                </div>
+              </div>
+              <div class="glass-subtle rounded-2xl p-3.5">
+                <label class="block text-xs font-semibold text-slate-200 mb-1">Podio semanal</label>
+                <select name="podiumRank" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-sm text-white">
+                  <option value="0">Sin podio</option>
+                  <option value="1">1.er Lugar</option>
+                  <option value="2">2.do Lugar</option>
+                  <option value="3">3.er Lugar</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2 flex flex-wrap gap-4 glass-subtle rounded-2xl p-3.5 text-xs text-slate-200">
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input name="goal3DaysStreak" type="checkbox" class="rounded accent-cyan-400" />
+                  Racha 3 días meta
+                </label>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input name="weeklyStreak4of5" type="checkbox" class="rounded accent-cyan-400" />
+                  Meta 4/5 días
+                </label>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input name="weeklyStreak5of5" type="checkbox" class="rounded accent-cyan-400" />
+                  Meta 5/5 días
+                </label>
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                  <input name="beatPrevWeekAvg" type="checkbox" class="rounded accent-cyan-400" />
+                  Supera promedio semana ant.
+                </label>
+              </div>
+              <div class="sm:col-span-2">
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm transition cursor-pointer">
+                  Calcular VitalCoins Semanales
+                </button>
+              </div>
+            </div>
+
+            <div class="lg:col-span-5 glass-subtle rounded-2xl p-5 flex flex-col justify-between">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-cyan-300">Resultado de la simulación</p>
+                <div class="mt-2 flex items-baseline justify-between gap-2">
+                  <span class="text-2xl sm:text-3xl font-extrabold ${calc.qualityClauseFailed ? "text-rose-400" : "text-emerald-300"}">
+                    ${escapeHtml(formatVc(calc.finalVc))}
+                  </span>
+                  <span class="text-xs text-slate-400">Bruto: ${escapeHtml(formatVc(calc.grossVc))}</span>
+                </div>
+                ${
+                  calc.qualityClauseFailed
+                    ? `<p class="mt-2 text-xs text-rose-300 bg-rose-950/60 border border-rose-500/30 rounded-xl p-2.5">
+                        Cláusula de Calidad activada: ${escapeHtml(calc.qualityPct)}% es menor al ${escapeHtml(calc.minQuality)}% requerido. Se anulan los VitalCoins semanales.
+                      </p>`
+                    : `<p class="mt-2 text-xs text-emerald-300">Calidad aprobada (${escapeHtml(calc.qualityPct)}% ≥ ${escapeHtml(calc.minQuality)}%).</p>`
+                }
+                <div class="mt-4 max-h-56 overflow-y-auto custom-scroll space-y-1.5 pr-1">
+                  ${calc.lines
+                    .filter((l) => l.vc > 0)
+                    .map(
+                      (l) => `
+                    <div class="flex items-center justify-between text-xs py-1.5 px-2.5 rounded-lg bg-slate-950/70">
+                      <span class="text-slate-300 truncate pr-2">${escapeHtml(l.label)}</span>
+                      <span class="font-bold text-cyan-300 shrink-0">${escapeHtml(formatVc(l.vc))}</span>
+                    </div>
+                  `
+                    )
+                    .join("") || `<p class="text-xs text-slate-500 py-4 text-center">Ingresa valores y haz clic en calcular.</p>`}
+                </div>
+              </div>
+            </div>
+          </form>
+        </section>
+      `;
+    }
+
+    function renderAdvisorDashboard(session) {
+      const advisors = getAdvisors();
+      const currentAdvisor =
+        advisors.find((a) => a.id === session.id || normalizeEmail(a.email) === normalizeEmail(session.email)) || session;
+      const balance = Number(currentAdvisor.balance) || 0;
+      const groupRole = normalizeAdvisorRole(currentAdvisor.role);
+      const settings = getSettings();
+      const groupGoal = settings.groupGoals[groupRole] || DEFAULT_GROUP_GOALS[groupRole];
+
+      const groupAdvisors = advisors.filter((a) => normalizeAdvisorRole(a.role) === groupRole);
+      const groupTotalVc = groupAdvisors.reduce((acc, a) => acc + (Number(a.balance) || 0), 0);
+      const goalPct = Math.min(100, Math.round((groupTotalVc / Math.max(1, groupGoal.targetVc)) * 100));
+
+      const otherAdvisors = advisors.filter((a) => a.id !== currentAdvisor.id);
+      const allTxs = getTransactions();
+      const myTxs = allTxs.filter(
+        (t) => t.senderId === currentAdvisor.id || t.recipientId === currentAdvisor.id
+      );
+      const rewards = getRewards().filter((r) => r.active);
+      const myRedemptions = getRedemptions().filter(
+        (r) => r.advisorId === currentAdvisor.id || normalizeEmail(r.advisorEmail) === normalizeEmail(currentAdvisor.email)
+      );
+
+      return `
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="glass-navy rounded-3xl p-6">
+              <p class="text-xs font-bold uppercase tracking-wider text-cyan-300">Saldo Disponible</p>
+              <p class="text-3xl font-extrabold text-white mt-2">${escapeHtml(formatVc(balance))}</p>
+              <p class="text-xs text-slate-400 mt-1">${escapeHtml(currentAdvisor.name)} · ${escapeHtml(groupRole)}</p>
+            </div>
+
+            <div class="glass-navy rounded-3xl p-6">
+              <div class="flex items-center justify-between gap-2">
+                <p class="text-xs font-bold uppercase tracking-wider text-emerald-300">${escapeHtml(groupGoal.title)}</p>
+                <span class="text-xs font-extrabold text-emerald-300">${goalPct}%</span>
+              </div>
+              <p class="text-lg font-extrabold text-white mt-2">
+                ${escapeHtml(formatVc(groupTotalVc))} <span class="text-xs font-normal text-slate-400">/ ${escapeHtml(formatVc(groupGoal.targetVc))}</span>
+              </p>
+              <div class="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden mt-3">
+                <div class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400" style="width: ${goalPct}%"></div>
+              </div>
+            </div>
+
+            <div class="glass-navy rounded-3xl p-6">
+              <p class="text-xs font-bold uppercase tracking-wider text-amber-300">Mis Canjes</p>
+              <p class="text-3xl font-extrabold text-white mt-2">${myRedemptions.length}</p>
+              <p class="text-xs text-slate-400 mt-1">${myTxs.length} movimientos registrados en tu historial</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <section class="lg:col-span-5 glass-navy rounded-3xl p-6">
+              <h2 class="text-lg font-extrabold text-white">Enviar VitalCoins a otro asesor</h2>
+              <p class="text-xs text-slate-400 mt-1">Transfiere puntos desde tu saldo disponible hacia otro compañero.</p>
+              <form id="advisor-transfer-form" class="mt-4 space-y-3.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Asesor destinatario</label>
+                  <select id="transfer-recipient" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2.5 text-sm text-white">
+                    ${
+                      otherAdvisors.length
+                        ? otherAdvisors
+                            .map(
+                              (a) =>
+                                `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} (${escapeHtml(a.role)})</option>`
+                            )
+                            .join("")
+                        : `<option value="">No hay otros asesores registrados</option>`
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Cantidad de VitalCoins</label>
+                  <input id="transfer-amount" type="number" min="1" step="1" required placeholder="Ej. 10000" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Motivo / concepto</label>
+                  <input id="transfer-note" type="text" required placeholder="Ej. Apoyo en cierre de llamada" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3.5 py-2.5 text-sm text-white" />
+                </div>
+                <button type="submit" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm transition cursor-pointer">
+                  Enviar VitalCoins
+                </button>
+              </form>
+            </section>
+
+            <section class="lg:col-span-7 glass-navy rounded-3xl p-6">
+              <h2 class="text-lg font-extrabold text-white">Catálogo de Recompensas (${escapeHtml(groupRole)})</h2>
+              <p class="text-xs text-slate-400 mt-1">Precios asignados para tu grupo sin incrementos individuales por asesor.</p>
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                ${rewards
+                  .map((rew) => {
+                    const price = getRewardPriceForGroup(rew, groupRole);
+                    const canAfford = balance >= price && rew.stock > 0;
+                    return `
+                      <div class="glass-subtle rounded-2xl p-4 flex flex-col justify-between gap-3">
+                        <div>
+                          <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-cyan-300">${escapeHtml(rew.category)}</span>
+                            <span class="text-[11px] text-slate-400">Stock: ${escapeHtml(rew.stock)}</span>
+                          </div>
+                          <h3 class="text-sm font-bold text-white mt-1">${escapeHtml(rew.title)}</h3>
+                          <p class="text-xs text-slate-400 mt-1">${escapeHtml(rew.description)}</p>
+                        </div>
+                        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-800/80">
+                          <span class="text-xs font-extrabold text-emerald-300">${escapeHtml(formatVc(price))}</span>
+                          <button type="button" data-redeem-id="${escapeHtml(rew.id)}" ${
+                            canAfford ? "" : "disabled"
+                          } class="redeem-btn px-3 py-1.5 rounded-xl text-xs font-bold transition ${
+                            canAfford
+                              ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer"
+                              : "bg-slate-800 text-slate-500 cursor-not-allowed"
+                          }">
+                            ${rew.stock <= 0 ? "Agotado" : "Canjear"}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  })
+                  .join("")}
+              </div>
+            </section>
+          </div>
+
+          ${renderWeeklyCalculatorSection(settings.metrics)}
+
+          <section class="glass-navy rounded-3xl p-6">
+            <h2 class="text-lg font-extrabold text-white mb-4">Historial de Movimientos</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs sm:text-sm">
+                <thead>
+                  <tr class="border-b border-slate-800 text-slate-400">
+                    <th class="py-2.5 pr-4">Fecha</th>
+                    <th class="py-2.5 pr-4">Detalle</th>
+                    <th class="py-2.5 pr-4">Concepto</th>
+                    <th class="py-2.5 text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/70">
+                  ${
+                    myTxs.length
+                      ? myTxs
+                          .map((t) => {
+                            const incoming = t.recipientId === currentAdvisor.id;
+                            return `
+                              <tr>
+                                <td class="py-3 pr-4 text-slate-400 whitespace-nowrap">${escapeHtml(formatDateTime(t.createdAt))}</td>
+                                <td class="py-3 pr-4 text-slate-200">
+                                  ${
+                                    incoming
+                                      ? `Recibido de <strong>${escapeHtml(t.senderName)}</strong>`
+                                      : `Enviado / Canje: <strong>${escapeHtml(t.recipientName)}</strong>`
+                                  }
+                                </td>
+                                <td class="py-3 pr-4 text-slate-300">${escapeHtml(t.note)}</td>
+                                <td class="py-3 text-right font-extrabold whitespace-nowrap ${
+                                  incoming ? "text-emerald-300" : "text-amber-300"
+                                }">
+                                  ${incoming ? "+" : "-"}${escapeHtml(formatVc(t.amount))}
+                                </td>
+                              </tr>
+                            `;
+                          })
+                          .join("")
+                      : `<tr><td colspan="4" class="py-6 text-center text-slate-500">Aún no tienes movimientos registrados.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderAdminDashboard(session) {
+      const allAdvisors = getAdvisors();
+      const query = uiState.adminSearchQuery.trim().toLowerCase();
+      const filteredAdvisors = allAdvisors.filter((a) => {
+        const matchesGroup = uiState.adminFilterGroup === "ALL" || a.role === uiState.adminFilterGroup;
+        const matchesQuery =
+          !query ||
+          a.name.toLowerCase().includes(query) ||
+          a.email.toLowerCase().includes(query) ||
+          a.role.toLowerCase().includes(query);
+        return matchesGroup && matchesQuery;
+      });
+
+      const totalPages = Math.max(1, Math.ceil(filteredAdvisors.length / uiState.adminPageSize));
+      if (uiState.adminPage > totalPages) uiState.adminPage = totalPages;
+      const startIdx = (uiState.adminPage - 1) * uiState.adminPageSize;
+      const pageAdvisors = filteredAdvisors.slice(startIdx, startIdx + uiState.adminPageSize);
+
+      const settings = getSettings();
+      const txs = getTransactions();
+      const redemptions = getRedemptions();
+      const totalAdvisorVc = allAdvisors.reduce((acc, a) => acc + (Number(a.balance) || 0), 0);
+
+      return `
+        <div class="space-y-6">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-navy rounded-3xl p-5">
+              <p class="text-xs font-bold text-cyan-300 uppercase">Mi Saldo Admin</p>
+              <p class="text-2xl font-extrabold text-white mt-1.5">∞ VitalCoins</p>
+              <p class="text-xs text-slate-400 mt-1">${escapeHtml(session.name)}</p>
+            </div>
+            <div class="glass-navy rounded-3xl p-5">
+              <p class="text-xs font-bold text-emerald-300 uppercase">Asesores Registrados</p>
+              <p class="text-2xl font-extrabold text-white mt-1.5">${allAdvisors.length}</p>
+              <p class="text-xs text-slate-400 mt-1">3 grupos activos</p>
+            </div>
+            <div class="glass-navy rounded-3xl p-5">
+              <p class="text-xs font-bold text-amber-300 uppercase">VitalCoins en Circulación</p>
+              <p class="text-2xl font-extrabold text-white mt-1.5">${escapeHtml(formatVc(totalAdvisorVc))}</p>
+              <p class="text-xs text-slate-400 mt-1">Suma de saldos de asesores</p>
+            </div>
+            <div class="glass-navy rounded-3xl p-5">
+              <p class="text-xs font-bold text-blue-300 uppercase">Movimientos / Canjes</p>
+              <p class="text-2xl font-extrabold text-white mt-1.5">${txs.length} / ${redemptions.length}</p>
+              <p class="text-xs text-slate-400 mt-1">Auditoría en tiempo real</p>
+            </div>
+          </div>
+
+          <section class="glass-navy rounded-3xl p-6">
+            <h2 class="text-lg font-extrabold text-white">Enviar VitalCoins Infinitos a Asesor</h2>
+            <form id="admin-grant-form" class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3.5">
+              <select id="admin-grant-recipient" class="rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2.5 text-sm text-white">
+                ${
+                  allAdvisors.length
+                    ? allAdvisors
+                        .map(
+                          (a) =>
+                            `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} — ${escapeHtml(a.role)} (${escapeHtml(formatVc(a.balance))})</option>`
+                        )
+                        .join("")
+                    : `<option value="">Sin asesores registrados</option>`
+                }
+              </select>
+              <input id="admin-grant-amount" type="number" min="1" step="1" required placeholder="Cantidad (ej. 25000)" class="rounded-xl bg-slate-950/90 border border-slate-700 px-3.5 py-2.5 text-sm text-white" />
+              <input id="admin-grant-note" type="text" required placeholder="Motivo (ej. Bono semanal de calidad)" class="rounded-xl bg-slate-950/90 border border-slate-700 px-3.5 py-2.5 text-sm text-white" />
+              <button type="submit" class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm transition cursor-pointer">
+                Enviar VitalCoins
+              </button>
+            </form>
+          </section>
+
+          <section class="glass-navy rounded-3xl p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 class="text-lg font-extrabold text-white">Directorio y Ajuste de Saldos de Asesores</h2>
+                <p class="text-xs text-slate-400">Filtra por grupo, ajusta saldos directamente o elimina cuentas.</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <select id="admin-filter-group" class="rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-xs text-white">
+                  <option value="ALL" ${uiState.adminFilterGroup === "ALL" ? "selected" : ""}>Todos los grupos</option>
+                  ${ADVISOR_ROLES.map(
+                    (g) => `<option value="${escapeHtml(g)}" ${uiState.adminFilterGroup === g ? "selected" : ""}>${escapeHtml(g)}</option>`
+                  ).join("")}
+                </select>
+                <input id="admin-search-input" type="search" value="${escapeHtml(uiState.adminSearchQuery)}" placeholder="Buscar nombre o correo..." class="rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-xs text-white" />
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs sm:text-sm">
+                <thead>
+                  <tr class="border-b border-slate-800 text-slate-400">
+                    <th class="py-2.5 pr-3">Asesor</th>
+                    <th class="py-2.5 pr-3">Grupo</th>
+                    <th class="py-2.5 pr-3">Contraseña</th>
+                    <th class="py-2.5 pr-3">Saldo actual</th>
+                    <th class="py-2.5 pr-3">Ajustar saldo</th>
+                    <th class="py-2.5 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/70">
+                  ${
+                    pageAdvisors.length
+                      ? pageAdvisors
+                          .map((adv) => {
+                            const passVisible = uiState.revealedPasswords.has(adv.id);
+                            return `
+                              <tr>
+                                <td class="py-3 pr-3">
+                                  <div class="font-bold text-white">${escapeHtml(adv.name)}</div>
+                                  <div class="text-xs text-slate-400">${escapeHtml(adv.email)}</div>
+                                </td>
+                                <td class="py-3 pr-3 text-cyan-200 whitespace-nowrap">${escapeHtml(adv.role)}</td>
+                                <td class="py-3 pr-3 whitespace-nowrap">
+                                  <span class="font-mono text-xs text-slate-300">${passVisible ? escapeHtml(adv.password) : "••••"}</span>
+                                  <button type="button" data-toggle-pass="${escapeHtml(adv.id)}" class="toggle-pass-btn ml-2 text-[11px] text-cyan-300 hover:underline cursor-pointer">
+                                    ${passVisible ? "Ocultar" : "Ver"}
+                                  </button>
+                                </td>
+                                <td class="py-3 pr-3 font-extrabold text-emerald-300 whitespace-nowrap">${escapeHtml(formatVc(adv.balance))}</td>
+                                <td class="py-3 pr-3 whitespace-nowrap">
+                                  <div class="flex items-center gap-1.5">
+                                    <input type="number" min="0" step="1" value="${escapeHtml(adv.balance)}" data-adjust-input="${escapeHtml(adv.id)}" class="w-28 rounded-lg bg-slate-950 border border-slate-700 px-2 py-1 text-xs text-white" />
+                                    <button type="button" data-adjust-id="${escapeHtml(adv.id)}" class="adjust-balance-btn px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold cursor-pointer">
+                                      Guardar
+                                    </button>
+                                  </div>
+                                </td>
+                                <td class="py-3 text-right whitespace-nowrap">
+                                  <button type="button" data-delete-id="${escapeHtml(adv.id)}" class="delete-advisor-btn px-2.5 py-1 rounded-lg bg-rose-950/80 hover:bg-rose-800 text-rose-200 border border-rose-500/30 text-xs font-bold cursor-pointer">
+                                    Eliminar
+                                  </button>
+                                </td>
+                              </tr>
+                            `;
+                          })
+                          .join("")
+                      : `<tr><td colspan="6" class="py-6 text-center text-slate-500">No se encontraron asesores con ese filtro.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-4 flex items-center justify-between text-xs text-slate-400">
+              <span>Mostrando ${pageAdvisors.length} de ${filteredAdvisors.length} asesores</span>
+              <div class="flex items-center gap-2">
+                <button id="admin-prev-page" type="button" ${uiState.adminPage <= 1 ? "disabled" : ""} class="px-3 py-1 rounded-lg bg-slate-800 disabled:opacity-40 text-white cursor-pointer">Anterior</button>
+                <span>Página ${uiState.adminPage} / ${totalPages}</span>
+                <button id="admin-next-page" type="button" ${uiState.adminPage >= totalPages ? "disabled" : ""} class="px-3 py-1 rounded-lg bg-slate-800 disabled:opacity-40 text-white cursor-pointer">Siguiente</button>
+              </div>
+            </div>
+          </section>
+
+          ${renderWeeklyCalculatorSection(settings.metrics)}
+
+          <section class="glass-navy rounded-3xl p-6">
+            <h2 class="text-lg font-extrabold text-white mb-4">Registro Global de Movimientos</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs sm:text-sm">
+                <thead>
+                  <tr class="border-b border-slate-800 text-slate-400">
+                    <th class="py-2.5 pr-4">Fecha</th>
+                    <th class="py-2.5 pr-4">Origen</th>
+                    <th class="py-2.5 pr-4">Destino</th>
+                    <th class="py-2.5 pr-4">Concepto</th>
+                    <th class="py-2.5 text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/70">
+                  ${
+                    txs.length
+                      ? txs
+                          .slice(0, 30)
+                          .map(
+                            (t) => `
+                            <tr>
+                              <td class="py-2.5 pr-4 text-slate-400 whitespace-nowrap">${escapeHtml(formatDateTime(t.createdAt))}</td>
+                              <td class="py-2.5 pr-4 text-slate-200">${escapeHtml(t.senderName)}</td>
+                              <td class="py-2.5 pr-4 text-cyan-200">${escapeHtml(t.recipientName)}</td>
+                              <td class="py-2.5 pr-4 text-slate-300">${escapeHtml(t.note)}</td>
+                              <td class="py-2.5 text-right font-extrabold text-emerald-300 whitespace-nowrap">${escapeHtml(formatVc(t.amount))}</td>
+                            </tr>
+                          `
+                          )
+                          .join("")
+                      : `<tr><td colspan="5" class="py-6 text-center text-slate-500">Sin movimientos registrados aún.</td></tr>`
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function bindEvents(session) {
+      if (!session) {
+        document.getElementById("tab-login-btn")?.addEventListener("click", () => {
+          uiState.authTab = "login";
+          renderApp();
+        });
+        document.getElementById("tab-register-btn")?.addEventListener("click", () => {
+          uiState.authTab = "register";
+          renderApp();
+        });
+
+        document.getElementById("login-form")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const email = document.getElementById("login-email")?.value || "";
+          const pass = document.getElementById("login-password")?.value || "";
+          const res = loginUser(email, pass);
+          if (!res.ok) {
+            showToast(res.error, "error");
+            return;
+          }
+          showToast(`Bienvenido, ${res.user.name}.`, "success");
+          renderApp();
+        });
+
+        document.getElementById("register-form")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const name = document.getElementById("reg-name")?.value || "";
+          const email = document.getElementById("reg-email")?.value || "";
+          const role = document.getElementById("reg-role")?.value || ADVISOR_ROLES[0];
+          const password = document.getElementById("reg-password")?.value || "";
+          const res = registerAdvisorAccount({ name, email, password, role });
+          if (!res.ok) {
+            showToast(res.error, "error");
+            return;
+          }
+          showToast(`Cuenta creada para ${res.advisor.name}.`, "success");
+          renderApp();
+        });
+      } else if (isAuthorizedAdmin(session)) {
+        document.getElementById("admin-grant-form")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const recipientId = document.getElementById("admin-grant-recipient")?.value || "";
+          const amount = document.getElementById("admin-grant-amount")?.value || "";
+          const note = document.getElementById("admin-grant-note")?.value || "";
+          const res = transferVitalCoins({ senderSession: session, recipientAdvisorId: recipientId, amount, note });
+          if (!res.ok) {
+            showToast(res.error, "error");
+            return;
+          }
+          showToast(`Enviados ${formatVc(amount)} a ${res.tx.recipientName}.`, "success");
+          renderApp();
+        });
+
+        document.getElementById("admin-filter-group")?.addEventListener("change", (e) => {
+          uiState.adminFilterGroup = e.target.value;
+          uiState.adminPage = 1;
+          renderApp();
+        });
+
+        document.getElementById("admin-search-input")?.addEventListener("input", (e) => {
+          uiState.adminSearchQuery = e.target.value;
+          uiState.adminPage = 1;
+          renderApp();
+        });
+
+        document.getElementById("admin-prev-page")?.addEventListener("click", () => {
+          if (uiState.adminPage > 1) {
+            uiState.adminPage -= 1;
+            renderApp();
+          }
+        });
+
+        document.getElementById("admin-next-page")?.addEventListener("click", () => {
+          uiState.adminPage += 1;
+          renderApp();
+        });
+
+        document.querySelectorAll(".toggle-pass-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.getAttribute("data-toggle-pass");
+            if (!id) return;
+            if (uiState.revealedPasswords.has(id)) uiState.revealedPasswords.delete(id);
+            else uiState.revealedPasswords.add(id);
+            renderApp();
+          });
+        });
+
+        document.querySelectorAll(".adjust-balance-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const advId = btn.getAttribute("data-adjust-id");
+            const inputEl = document.querySelector(`[data-adjust-input="${advId}"]`);
+            if (!advId || !inputEl) return;
+            const res = adjustAdvisorBalanceByAdmin(session, advId, inputEl.value, "Ajuste de saldo desde panel admin");
+            if (!res.ok) {
+              showToast(res.error, "error");
+              return;
+            }
+            showToast(`Saldo actualizado para ${res.updatedAdv.name}.`, "success");
+            renderApp();
+          });
+        });
+
+        document.querySelectorAll(".delete-advisor-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const advId = btn.getAttribute("data-delete-id");
+            if (!advId) return;
+            const res = deleteAdvisorByAdmin(session, advId);
+            if (!res.ok) {
+              showToast(res.error, "error");
+              return;
+            }
+            showToast(`Asesor ${res.deletedName} eliminado.`, "warning");
+            renderApp();
+          });
+        });
+      } else {
+        document.getElementById("advisor-transfer-form")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const recipientId = document.getElementById("transfer-recipient")?.value || "";
+          const amount = document.getElementById("transfer-amount")?.value || "";
+          const note = document.getElementById("transfer-note")?.value || "";
+          const res = transferVitalCoins({ senderSession: session, recipientAdvisorId: recipientId, amount, note });
+          if (!res.ok) {
+            showToast(res.error, "error");
+            return;
+          }
+          showToast(`Transferiste ${formatVc(amount)} a ${res.tx.recipientName}.`, "success");
+          renderApp();
+        });
+
+        document.querySelectorAll(".redeem-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const rewId = btn.getAttribute("data-redeem-id");
+            if (!rewId) return;
+            const res = redeemReward(session, rewId);
+            if (!res.ok) {
+              showToast(res.error, "error");
+              return;
+            }
+            showToast(`Canjeaste "${res.redemption.rewardTitle}".`, "success");
+            renderApp();
+          });
+        });
+      }
+
+      document.getElementById("weekly-calc-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.currentTarget);
+        const metrics = getSettings().metrics;
+        uiState.lastCalcBreakdown = calculateWeeklyVitalCoins(
+          {
+            qualityPct: fd.get("qualityPct"),
+            salesValue: fd.get("salesValue"),
+            codBeforeGoal: fd.get("codBeforeGoal"),
+            codAfterGoal: fd.get("codAfterGoal"),
+            instantBeforeGoal: fd.get("instantBeforeGoal"),
+            instantAfterGoal: fd.get("instantAfterGoal"),
+            streakSales: fd.get("streakSales"),
+            firstSaleDayCount: fd.get("firstSaleDayCount"),
+            noCancelledDayCount: fd.get("noCancelledDayCount"),
+            doubleDailyGoalCount: fd.get("doubleDailyGoalCount"),
+            tripleDailyGoalCount: fd.get("tripleDailyGoalCount"),
+            podiumRank: fd.get("podiumRank"),
+            goal3DaysStreak: fd.get("goal3DaysStreak") === "on",
+            weeklyStreak4of5: fd.get("weeklyStreak4of5") === "on",
+            weeklyStreak5of5: fd.get("weeklyStreak5of5") === "on",
+            beatPrevWeekAvg: fd.get("beatPrevWeekAvg") === "on",
+          },
+          metrics
+        );
+        renderApp();
+      });
+    }
+
+    function renderApp() {
+      const session = getCurrentSession();
+      renderHeader(session);
+      updateSyncBadge();
+
+      const root = document.getElementById("app-root");
+      if (!root) return;
+
+      if (!session) {
+        root.innerHTML = renderAuthScreen();
+      } else if (isAuthorizedAdmin(session)) {
+        root.innerHTML = renderAdminDashboard(session);
+      } else {
+        root.innerHTML = renderAdvisorDashboard(session);
+      }
+
+      bindEvents(session);
+    }
+
+    function setupModal() {
+      const modal = document.getElementById("reset-modal");
+      const openBtn = document.getElementById("open-reset-modal-btn");
+      const cancelBtn = document.getElementById("cancel-reset-btn");
+      const confirmBtn = document.getElementById("confirm-reset-btn");
+
+      const closeModal = () => {
+        modal?.classList.add("hidden");
+        modal?.classList.remove("flex");
+      };
+
+      openBtn?.addEventListener("click", () => {
+        modal?.classList.remove("hidden");
+        modal?.classList.add("flex");
+      });
+      cancelBtn?.addEventListener("click", closeModal);
+      confirmBtn?.addEventListener("click", () => {
+        closeModal();
+        resetDemoData();
+      });
+      modal?.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+
+    getAdvisors();
+    getTransactions();
+    getRedemptions();
+    getRewards();
+    getSettings();
+    setupModal();
+    renderApp();
+    initFirebaseAndAuth();
+  </script>
+</body>
+</html>
