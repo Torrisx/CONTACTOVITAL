@@ -200,6 +200,8 @@
       REWARDS: "cv_vitalcoins_rewards_v11",
       SETTINGS: "cv_vitalcoins_settings_v11",
       SESSION: "cv_vitalcoins_session_v11",
+      DELETED_ADVISORS: "cv_vitalcoins_deleted_advisors_v11",
+      TOMBSTONES_RESET_AT: "cv_vitalcoins_tombstones_reset_at_v11",
     };
 
     const CLOUD_COLLECTIONS = Object.freeze({
@@ -215,7 +217,7 @@
         id: "admin_santiago_naranjo",
         name: "Santiago Naranjo",
         email: "santiagonaranjo@contactovitalllc.com",
-        password: "santivitall",
+        password: "santivital",
         accountType: "admin",
         role: "Administrador",
         balance: "INFINITE",
@@ -223,8 +225,8 @@
       "anapeña@contactovitalllc.com": {
         id: "admin_ana_pena",
         name: "Ana Peña",
-        email: "anapena@contactovitalllc.com",
-        password: "anavitall",
+        email: "anapeña@contactovitalllc.com",
+        password: "anavital",
         accountType: "admin",
         role: "Administrador",
         balance: "INFINITE",
@@ -233,7 +235,7 @@
         id: "admin_emanuel_villamil",
         name: "Emanuel Villamil",
         email: "emanuelvillamil@contactovitalllc.com",
-        password: "emavitall",
+        password: "emavital",
         accountType: "admin",
         role: "Administrador",
         balance: "INFINITE",
@@ -595,10 +597,12 @@
             if (data && typeof data === "object") cloudList.push({ id: docSnap.id, ...data });
           });
           const localList = getAdvisors();
+          const deletedIds = new Set(getDeletedAdvisorIds());
           const mergedMap = new Map();
           [...localList, ...cloudList].forEach((raw) => {
             const clean = sanitizeAdvisorRecord(raw);
             if (!clean) return;
+            if (deletedIds.has(String(clean.id))) return;
             const existing = mergedMap.get(clean.email);
             if (!existing) {
               mergedMap.set(clean.email, clean);
@@ -670,10 +674,33 @@
       if (setCol) {
         onSnapshot(setCol, (snap) => {
           const currentSettings = getSettings();
+          const cloudTombstones = [];
+          let cloudResetAt = null;
           let changed = false;
+          let advisorsPruned = false;
+
+          snap.forEach((docSnap) => {
+            if (docSnap.id === "tombstones_reset") {
+              const d = docSnap.data();
+              if (d && d.at) cloudResetAt = String(d.at);
+            }
+          });
+
+          const localResetAt = String(readLocal(STORAGE_KEYS.TOMBSTONES_RESET_AT) || "");
+          if (cloudResetAt && cloudResetAt > localResetAt) {
+            writeLocal(STORAGE_KEYS.TOMBSTONES_RESET_AT, cloudResetAt);
+            saveDeletedAdvisorIds([]);
+            advisorsPruned = true;
+          }
+
           snap.forEach((docSnap) => {
             const d = docSnap.data();
             if (!d || typeof d !== "object") return;
+            if (docSnap.id.indexOf("deleted_advisor_") === 0) {
+              const advId = String(d.advisorId || docSnap.id.slice("deleted_advisor_".length));
+              if (advId) cloudTombstones.push(advId);
+              return;
+            }
             if (docSnap.id === "metrics") {
               currentSettings.metrics = { ...DEFAULT_METRICS, ...d };
               changed = true;
@@ -682,8 +709,35 @@
               changed = true;
             }
           });
+
+          const localTombstones = getDeletedAdvisorIds();
+          const mergedTombstones = Array.from(new Set([...localTombstones, ...cloudTombstones]));
+          const missingInCloud = localTombstones.filter((id) => !cloudTombstones.includes(id));
+          if (missingInCloud.length) {
+            missingInCloud.forEach((id) => {
+              cloudUpsert(CLOUD_COLLECTIONS.SETTINGS, `deleted_advisor_${id}`, {
+                advisorId: id,
+                deletedAt: new Date().toISOString(),
+                deletedBy: "sync-local",
+              });
+            });
+          }
+
+          const sameTombstones =
+            localTombstones.length === mergedTombstones.length &&
+            mergedTombstones.every((id) => localTombstones.includes(id));
+          if (!sameTombstones) {
+            writeLocal(STORAGE_KEYS.DELETED_ADVISORS, JSON.stringify(mergedTombstones));
+            writeLocal(STORAGE_KEYS.ADVISORS, JSON.stringify(getAdvisors()));
+            advisorsPruned = true;
+          }
+
           if (changed) {
             writeLocal(STORAGE_KEYS.SETTINGS, JSON.stringify(currentSettings));
+            renderApp();
+          }
+          if (advisorsPruned) {
+            updateSyncBadge();
             renderApp();
           }
         });
@@ -814,6 +868,47 @@
       };
     }
 
+    function getDeletedAdvisorIds() {
+      const raw = readLocal(STORAGE_KEYS.DELETED_ADVISORS);
+      const parsed = parseJsonSafe(raw, []);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((v) => String(v)).filter(Boolean);
+    }
+
+    function saveDeletedAdvisorIds(ids) {
+      const clean = Array.from(new Set((Array.isArray(ids) ? ids : []).map((v) => String(v)).filter(Boolean)));
+      writeLocal(STORAGE_KEYS.DELETED_ADVISORS, JSON.stringify(clean));
+      return clean;
+    }
+
+    function markAdvisorDeleted(advisorId) {
+      const id = String(advisorId);
+      const ids = getDeletedAdvisorIds();
+      if (!ids.includes(id)) ids.push(id);
+      saveDeletedAdvisorIds(ids);
+      if (uiState.cloudActive && activeCloudUid) {
+        cloudUpsert(CLOUD_COLLECTIONS.SETTINGS, `deleted_advisor_${id}`, {
+          advisorId: id,
+          deletedAt: new Date().toISOString(),
+          deletedBy: getCurrentSession()?.email || "admin",
+        });
+      }
+      return ids;
+    }
+
+    function clearAdvisorTombstones() {
+      const ids = getDeletedAdvisorIds();
+      const resetAt = new Date().toISOString();
+      writeLocal(STORAGE_KEYS.TOMBSTONES_RESET_AT, resetAt);
+      saveDeletedAdvisorIds([]);
+      if (uiState.cloudActive && activeCloudUid) {
+        ids.forEach((id) => cloudRemove(CLOUD_COLLECTIONS.SETTINGS, `deleted_advisor_${id}`));
+        cloudRemove(CLOUD_COLLECTIONS.SETTINGS, "deleted_advisors");
+        cloudUpsert(CLOUD_COLLECTIONS.SETTINGS, "tombstones_reset", { at: resetAt });
+      }
+      return ids;
+    }
+
     function getAdvisors() {
       const raw = readLocal(STORAGE_KEYS.ADVISORS);
       if (raw === null) {
@@ -823,7 +918,10 @@
       }
       const parsed = parseJsonSafe(raw, []);
       if (!Array.isArray(parsed)) return createSeedAdvisors();
-      return parsed.map(sanitizeAdvisorRecord).filter(Boolean);
+      const deletedIds = new Set(getDeletedAdvisorIds());
+      return parsed
+        .map(sanitizeAdvisorRecord)
+        .filter((a) => Boolean(a) && !deletedIds.has(String(a.id)));
     }
 
     function saveAdvisors(list) {
@@ -987,6 +1085,7 @@
         groupGoals: sanitizeGroupGoals(DEFAULT_GROUP_GOALS),
       });
 
+      clearAdvisorTombstones();
       saveAdvisors(advisors);
       saveTransactions(transactions);
       saveRedemptions(redemptions);
@@ -1397,6 +1496,8 @@
       if (!target) {
         return { ok: false, error: "Asesor no encontrado." };
       }
+      markAdvisorDeleted(target.id);
+
       const filtered = advisors.filter((a) => a.id !== advisorId);
       saveAdvisors(filtered);
 
