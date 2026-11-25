@@ -173,15 +173,14 @@
     } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
     // Pega aquí tu objeto firebaseConfig si quieres sincronización en la nube desde GitHub Pages:
-  const USER_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAX0_SGKtoxgutDqkjhEvkFPlw864-8_gk",
-  authDomain: "contacto-vital-72165.firebaseapp.com",
-  projectId: "contacto-vital-72165",
-  storageBucket: "contacto-vital-72165.firebasestorage.app",
-  messagingSenderId: "698513262593",
-  appId: "1:698513262593:web:5cac9c3595f4429f5c5800",
-  measurementId: "G-8DD47LR04S",
-};
+    // const USER_FIREBASE_CONFIG = {
+    //   apiKey: "AIzaSyAX0_SGKtoxgutDqkjhEvkFPlw864-8_gk",
+    //   authDomain: "...",
+    //   projectId: "...",
+    //   storageBucket: "...",
+    //   messagingSenderId: "...",
+    //   appId: "..."
+    // };
     const USER_FIREBASE_CONFIG = {
       apiKey: "AIzaSyAX0_SGKtoxgutDqkjhEvkFPlw864-8_gk",
       authDomain: "contacto-vital-72165.firebaseapp.com",
@@ -2224,3 +2223,148 @@
 
         document.getElementById("admin-next-page")?.addEventListener("click", () => {
           uiState
+
+          if (uiState.adminPage < totalPages) {
+            uiState.adminPage += 1;
+            renderApp();
+          }
+        });
+
+        document.querySelectorAll(".toggle-pass-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.togglePass;
+            if (uiState.revealedPasswords.has(id)) uiState.revealedPasswords.delete(id);
+            else uiState.revealedPasswords.add(id);
+            renderApp();
+          });
+        });
+
+        document.querySelectorAll(".adjust-balance-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const advisorId = btn.dataset.adjustId;
+            const input = document.querySelector(`[data-adjust-input="${advisorId}"]`);
+            const amount = Math.round(Number(input?.value));
+            if (!Number.isFinite(amount) || amount < 0) {
+              showToast("Ingresa un saldo válido igual o mayor a 0.", "error");
+              return;
+            }
+            const advisors = getAdvisors();
+            const idx = advisors.findIndex((a) => a.id === advisorId);
+            if (idx === -1) return;
+            const now = new Date().toISOString();
+            advisors[idx] = { ...advisors[idx], balance: amount, updatedAt: now };
+            saveAdvisors(advisors);
+            if (uiState.cloudActive && activeCloudUid) {
+              cloudUpsert(CLOUD_COLLECTIONS.ADVISORS, advisors[idx].id, advisors[idx]);
+            }
+            showToast(`Saldo de ${advisors[idx].name} actualizado.`, "success");
+            renderApp();
+          });
+        });
+
+        document.querySelectorAll(".delete-advisor-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const advisorId = btn.dataset.deleteId;
+            const result = deleteAdvisorByAdmin(session, advisorId);
+            if (!result.ok) {
+              showToast(result.error, "error");
+              return;
+            }
+            showToast(`Cuenta de ${result.deletedName} eliminada.`, "success");
+            renderApp();
+          });
+        });
+      } else {
+        document.getElementById("advisor-transfer-form")?.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const recipientAdvisorId = document.getElementById("transfer-recipient")?.value || "";
+          const amount = document.getElementById("transfer-amount")?.value || "";
+          const note = document.getElementById("transfer-note")?.value || "";
+          const result = transferVitalCoins({ senderSession: session, recipientAdvisorId, amount, note });
+          if (!result.ok) {
+            showToast(result.error, "error");
+            return;
+          }
+          showToast(`Enviados ${formatVc(amount)} a ${result.tx.recipientName}.`, "success");
+          renderApp();
+        });
+
+        document.querySelectorAll(".redeem-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const result = redeemReward(session, btn.dataset.redeemId);
+            if (!result.ok) {
+              showToast(result.error, "error");
+              return;
+            }
+            showToast(`Canje realizado: ${result.redemption.rewardTitle}.`, "success");
+            renderApp();
+          });
+        });
+      }
+
+      document.getElementById("weekly-calc-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const form = e.currentTarget;
+        const data = new FormData(form);
+        const input = {
+          qualityPct: data.get("qualityPct"),
+          salesValue: data.get("salesValue"),
+          codBeforeGoal: data.get("codBeforeGoal"),
+          codAfterGoal: data.get("codAfterGoal"),
+          instantBeforeGoal: data.get("instantBeforeGoal"),
+          instantAfterGoal: data.get("instantAfterGoal"),
+          streakSales: data.get("streakSales"),
+          firstSaleDayCount: data.get("firstSaleDayCount"),
+          noCancelledDayCount: data.get("noCancelledDayCount"),
+          doubleDailyGoalCount: data.get("doubleDailyGoalCount"),
+          tripleDailyGoalCount: data.get("tripleDailyGoalCount"),
+          crossSellingCount: data.get("crossSellingCount"),
+          monitoredCall100Count: data.get("monitoredCall100Count"),
+          teamDailyGoalCount: data.get("teamDailyGoalCount"),
+          podiumRank: data.get("podiumRank"),
+          goal3DaysStreak: data.get("goal3DaysStreak") !== null,
+          weeklyStreak4of5: data.get("weeklyStreak4of5") !== null,
+          weeklyStreak5of5: data.get("weeklyStreak5of5") !== null,
+          beatPrevWeekAvg: data.get("beatPrevWeekAvg") !== null,
+        };
+        uiState.lastCalcBreakdown = calculateWeeklyVitalCoins(input, getSettings().metrics);
+        renderApp();
+      });
+
+      document.getElementById("open-reset-modal-btn")?.addEventListener("click", () => {
+        const modal = document.getElementById("reset-modal");
+        modal?.classList.remove("hidden");
+        modal?.classList.add("flex");
+      });
+      document.getElementById("cancel-reset-btn")?.addEventListener("click", () => {
+        const modal = document.getElementById("reset-modal");
+        modal?.classList.add("hidden");
+        modal?.classList.remove("flex");
+      });
+      document.getElementById("confirm-reset-btn")?.addEventListener("click", () => {
+        const modal = document.getElementById("reset-modal");
+        modal?.classList.add("hidden");
+        modal?.classList.remove("flex");
+        resetDemoData();
+      });
+    }
+
+    function renderApp() {
+      const session = getCurrentSession();
+      renderHeader(session);
+      const root = document.getElementById("app-root");
+      if (!root) return;
+      root.innerHTML = !session
+        ? renderAuthScreen()
+        : isAuthorizedAdmin(session)
+          ? renderAdminDashboard(session)
+          : renderAdvisorDashboard(session);
+      bindEvents(session);
+      updateSyncBadge();
+    }
+
+    renderApp();
+    initFirebaseAndAuth();
+  </script>
+</body>
+</html>
