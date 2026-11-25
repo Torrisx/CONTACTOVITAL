@@ -1230,6 +1230,9 @@
     // =========================================================================
 
     function transferVitalCoins({ senderSession, recipientAdvisorId, amount, note }) {
+      if (!isAuthorizedAdmin(senderSession)) {
+        return { ok: false, error: "Los asesores no tienen habilitadas las transferencias de VitalCoins." };
+      }
       const amt = Math.round(Number(amount));
       if (!Number.isFinite(amt) || amt <= 0) {
         return { ok: false, error: "Ingresa una cantidad válida mayor a 0 VitalCoins." };
@@ -1864,19 +1867,11 @@
     }
 
     function renderAdvisorDashboard(session) {
-      const advisors = getAdvisors();
       const currentAdvisor =
-        advisors.find((a) => a.id === session.id || normalizeEmail(a.email) === normalizeEmail(session.email)) || session;
+        getAdvisors().find((a) => a.id === session.id || normalizeEmail(a.email) === normalizeEmail(session.email)) || session;
       const balance = Number(currentAdvisor.balance) || 0;
       const groupRole = normalizeAdvisorRole(currentAdvisor.role);
       const settings = getSettings();
-      const groupGoal = settings.groupGoals[groupRole] || DEFAULT_GROUP_GOALS[groupRole];
-
-      const groupAdvisors = advisors.filter((a) => normalizeAdvisorRole(a.role) === groupRole);
-      const groupTotalVc = groupAdvisors.reduce((acc, a) => acc + (Number(a.balance) || 0), 0);
-      const goalPct = Math.min(100, Math.round((groupTotalVc / Math.max(1, groupGoal.targetVc)) * 100));
-
-      const otherAdvisors = advisors.filter((a) => a.id !== currentAdvisor.id);
       const allTxs = getTransactions();
       const myTxs = allTxs.filter(
         (t) => t.senderId === currentAdvisor.id || t.recipientId === currentAdvisor.id
@@ -1888,24 +1883,11 @@
 
       return `
         <div class="space-y-6">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="glass-navy rounded-3xl p-6">
               <p class="text-xs font-bold uppercase tracking-wider text-cyan-300">Saldo Disponible</p>
               <p class="text-3xl font-extrabold text-white mt-2">${escapeHtml(formatVc(balance))}</p>
               <p class="text-xs text-slate-400 mt-1">${escapeHtml(currentAdvisor.name)} · ${escapeHtml(groupRole)}</p>
-            </div>
-
-            <div class="glass-navy rounded-3xl p-6">
-              <div class="flex items-center justify-between gap-2">
-                <p class="text-xs font-bold uppercase tracking-wider text-emerald-300">${escapeHtml(groupGoal.title)}</p>
-                <span class="text-xs font-extrabold text-emerald-300">${goalPct}%</span>
-              </div>
-              <p class="text-lg font-extrabold text-white mt-2">
-                ${escapeHtml(formatVc(groupTotalVc))} <span class="text-xs font-normal text-slate-400">/ ${escapeHtml(formatVc(groupGoal.targetVc))}</span>
-              </p>
-              <div class="w-full h-2.5 rounded-full bg-slate-900 overflow-hidden mt-3">
-                <div class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400" style="width: ${goalPct}%"></div>
-              </div>
             </div>
 
             <div class="glass-navy rounded-3xl p-6">
@@ -1915,41 +1897,8 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <section class="lg:col-span-5 glass-navy rounded-3xl p-6">
-              <h2 class="text-lg font-extrabold text-white">Enviar VitalCoins a otro asesor</h2>
-              <p class="text-xs text-slate-400 mt-1">Transfiere puntos desde tu saldo disponible hacia otro compañero.</p>
-              <form id="advisor-transfer-form" class="mt-4 space-y-3.5">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1">Asesor destinatario</label>
-                  <select id="transfer-recipient" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2.5 text-sm text-white">
-                    ${
-                      otherAdvisors.length
-                        ? otherAdvisors
-                            .map(
-                              (a) =>
-                                `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} (${escapeHtml(a.role)})</option>`
-                            )
-                            .join("")
-                        : `<option value="">No hay otros asesores registrados</option>`
-                    }
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1">Cantidad de VitalCoins</label>
-                  <input id="transfer-amount" type="number" min="1" step="1" required placeholder="Ej. 10000" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3.5 py-2.5 text-sm text-white" />
-                </div>
-                <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1">Motivo / concepto</label>
-                  <input id="transfer-note" type="text" required placeholder="Ej. Apoyo en cierre de llamada" class="w-full rounded-xl bg-slate-950/90 border border-slate-700 px-3.5 py-2.5 text-sm text-white" />
-                </div>
-                <button type="submit" class="w-full py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-sm transition cursor-pointer">
-                  Enviar VitalCoins
-                </button>
-              </form>
-            </section>
-
-            <section class="lg:col-span-7 glass-navy rounded-3xl p-6">
+          <div class="grid grid-cols-1 gap-6">
+            <section class="glass-navy rounded-3xl p-6">
               <h2 class="text-lg font-extrabold text-white">Catálogo de Recompensas (${escapeHtml(groupRole)})</h2>
               <p class="text-xs text-slate-400 mt-1">Precios asignados para tu grupo sin incrementos individuales por asesor.</p>
               <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -2358,20 +2307,6 @@
           });
         });
       } else {
-        document.getElementById("advisor-transfer-form")?.addEventListener("submit", (e) => {
-          e.preventDefault();
-          const recipientAdvisorId = document.getElementById("transfer-recipient")?.value || "";
-          const amount = document.getElementById("transfer-amount")?.value || "";
-          const note = document.getElementById("transfer-note")?.value || "";
-          const result = transferVitalCoins({ senderSession: session, recipientAdvisorId, amount, note });
-          if (!result.ok) {
-            showToast(result.error, "error");
-            return;
-          }
-          showToast(`Enviados ${formatVc(amount)} a ${result.tx.recipientName}.`, "success");
-          renderApp();
-        });
-
         document.querySelectorAll(".redeem-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const result = redeemReward(session, btn.dataset.redeemId);
