@@ -213,29 +213,11 @@
     });
 
     const AUTHORIZED_ADMINS = Object.freeze({
-      "santiagonaranjo@contactovitalllc.com": {
-        id: "admin_santiago_naranjo",
-        name: "Santiago Naranjo",
-        email: "santiagonaranjo@contactovitalllc.com",
-        password: "santivital",
-        accountType: "admin",
-        role: "Administrador",
-        balance: "INFINITE",
-      },
-      "anapeña@contactovitalllc.com": {
-        id: "admin_ana_pena",
-        name: "Ana Peña",
-        email: "anapeña@contactovitalllc.com",
-        password: "anavital",
-        accountType: "admin",
-        role: "Administrador",
-        balance: "INFINITE",
-      },
-      "emanuelvillamil@contactovitalllc.com": {
-        id: "admin_emanuel_villamil",
-        name: "Emanuel Villamil",
-        email: "emanuelvillamil@contactovitalllc.com",
-        password: "emavital",
+      "admin": {
+        id: "admin_principal",
+        name: "Administrador",
+        email: "admin",
+        password: "admcalidad2027",
         accountType: "admin",
         role: "Administrador",
         balance: "INFINITE",
@@ -1708,8 +1690,8 @@
                 ? `
               <form id="login-form" class="space-y-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Correo electrónico</label>
-                  <input id="login-email" type="email" required placeholder="tu.correo@ejemplo.com" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Correo o usuario</label>
+                  <input id="login-email" type="text" required placeholder="Correo del asesor o usuario admin" autocomplete="username" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contraseña</label>
