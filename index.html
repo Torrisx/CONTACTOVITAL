@@ -832,15 +832,16 @@
 
     function sanitizeAdvisorRecord(raw) {
       if (!raw || typeof raw !== "object") return null;
-      const email = normalizeEmail(raw.email);
-      if (!email || isAuthorizedAdminEmail(email)) return null;
+      const username = normalizeEmail(raw.username || raw.email);
+      if (!username || isAuthorizedAdminEmail(username)) return null;
       const numBalance = Number(raw.balance);
       const safeBalance = Number.isFinite(numBalance) && numBalance >= 0 ? Math.round(numBalance) : 0;
       const createdAt = raw.createdAt || new Date().toISOString();
       return {
         id: String(raw.id || generateId("adv")),
         name: String(raw.name || "Asesor").trim() || "Asesor",
-        email,
+        username,
+        email: username,
         password: String(raw.password ?? "1234"),
         accountType: "advisor",
         role: normalizeAdvisorRole(raw.role),
@@ -848,6 +849,10 @@
         createdAt,
         updatedAt: raw.updatedAt || createdAt,
       };
+    }
+
+    function getAdvisorLoginId(advisor) {
+      return normalizeEmail(advisor?.username || advisor?.email);
     }
 
     function getDeletedAdvisorIds() {
@@ -1497,22 +1502,22 @@
       return { ok: true, deletedName: target.name };
     }
 
-    function registerAdvisorAccount({ name, email, password, role }) {
+    function registerAdvisorAccount({ name, username, password, role }) {
       const cleanName = String(name || "").trim();
-      const cleanEmail = normalizeEmail(email);
+      const cleanUsername = normalizeEmail(username);
       const cleanPassword = String(password || "");
       const cleanRole = normalizeAdvisorRole(role);
 
       if (!cleanName || cleanName.length < 2) {
         return { ok: false, error: "Ingresa tu nombre completo." };
       }
-      if (!cleanEmail || !cleanEmail.includes("@")) {
-        return { ok: false, error: "Ingresa un correo electrónico válido." };
+      if (!cleanUsername || cleanUsername.length < 3 || /\s/.test(cleanUsername)) {
+        return { ok: false, error: "El usuario debe tener al menos 3 caracteres y no contener espacios." };
       }
-      if (isAuthorizedAdminEmail(cleanEmail)) {
+      if (isAuthorizedAdminEmail(cleanUsername)) {
         return {
           ok: false,
-          error: "Ese correo pertenece a una cuenta administrativa reservada. El registro público es exclusivo para asesores.",
+          error: "Ese usuario pertenece a una cuenta administrativa reservada. El registro público es exclusivo para asesores.",
         };
       }
       if (cleanPassword.length < 4) {
@@ -1523,16 +1528,17 @@
       }
 
       const advisors = getAdvisors();
-      const exists = advisors.some((a) => normalizeEmail(a.email) === cleanEmail);
+      const exists = advisors.some((a) => getAdvisorLoginId(a) === cleanUsername);
       if (exists) {
-        return { ok: false, error: "Ya existe una cuenta de asesor registrada con ese correo." };
+        return { ok: false, error: "Ya existe una cuenta de asesor con ese usuario." };
       }
 
       const now = new Date().toISOString();
       const newAdvisor = {
         id: generateId("adv"),
         name: cleanName,
-        email: cleanEmail,
+        username: cleanUsername,
+        email: cleanUsername,
         password: cleanPassword,
         accountType: "advisor",
         role: cleanRole,
@@ -1552,16 +1558,16 @@
       return { ok: true, advisor: newAdvisor };
     }
 
-    function loginUser(emailRaw, passwordRaw) {
-      const email = normalizeEmail(emailRaw);
+    function loginUser(usernameRaw, passwordRaw) {
+      const username = normalizeEmail(usernameRaw);
       const password = String(passwordRaw ?? "").trim();
 
-      if (!email || !password) {
-        return { ok: false, error: "Ingresa tu correo y contraseña." };
+      if (!username || !password) {
+        return { ok: false, error: "Ingresa tu usuario y contraseña." };
       }
 
-      if (isAuthorizedAdminEmail(email)) {
-        const adminDef = AUTHORIZED_ADMINS[email];
+      if (isAuthorizedAdminEmail(username)) {
+        const adminDef = AUTHORIZED_ADMINS[username];
         if (password !== String(adminDef.password).trim()) {
           return { ok: false, error: "Credenciales de administrador incorrectas." };
         }
@@ -1578,9 +1584,9 @@
       }
 
       const advisors = getAdvisors();
-      const advisor = advisors.find((a) => normalizeEmail(a.email) === email);
+      const advisor = advisors.find((a) => getAdvisorLoginId(a) === username);
       if (!advisor) {
-        return { ok: false, error: "No existe una cuenta registrada con ese correo." };
+        return { ok: false, error: "No existe una cuenta registrada con ese usuario." };
       }
       if (password !== String(advisor.password ?? "").trim()) {
         return { ok: false, error: "Contraseña incorrecta." };
@@ -1652,7 +1658,7 @@
               Sistema de VitalCoins Semanales y Canje de Recompensas
             </h1>
             <p class="text-sm text-slate-300 mt-3 leading-relaxed">
-              Consulta tu saldo de <strong class="text-white">VitalCoins</strong>, transfiere puntos entre asesores, calcula bonificaciones semanales con la <strong class="text-amber-300">Cláusula de Calidad (≥ 80%)</strong> y canjea recompensas según tu grupo.
+              Consulta tu saldo de <strong class="text-white">VitalCoins</strong>, revisa tus resultados semanales con la <strong class="text-amber-300">Cláusula de Calidad (≥ 80%)</strong> y canjea recompensas según tu grupo.
             </p>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
@@ -1693,8 +1699,8 @@
                 ? `
               <form id="login-form" class="space-y-4">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Correo o usuario</label>
-                  <input id="login-email" type="text" required placeholder="Correo del asesor o usuario admin" autocomplete="username" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Usuario</label>
+                  <input id="login-email" type="text" required placeholder="Tu usuario o admin" autocomplete="username" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-300 mb-1.5">Contraseña</label>
@@ -1712,8 +1718,8 @@
                   <input id="reg-name" type="text" required placeholder="Ej. Carlos Mendoza" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Correo electrónico</label>
-                  <input id="reg-email" type="email" required placeholder="asesor@correo.com" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Usuario</label>
+                  <input id="reg-username" type="text" required minlength="3" pattern="[A-Za-z0-9._-]+" placeholder="Ej. carlosmendoza" autocomplete="username" class="w-full rounded-xl bg-slate-950/80 border border-slate-700/90 focus:border-cyan-400 focus:outline-none px-3.5 py-2.5 text-sm text-white" />
                 </div>
                 <div>
                   <label class="block text-xs font-semibold text-slate-300 mb-1.5">Grupo de asesor</label>
@@ -2070,7 +2076,7 @@
                     (g) => `<option value="${escapeHtml(g)}" ${uiState.adminFilterGroup === g ? "selected" : ""}>${escapeHtml(g)}</option>`
                   ).join("")}
                 </select>
-                <input id="admin-search-input" type="search" value="${escapeHtml(uiState.adminSearchQuery)}" placeholder="Buscar nombre o correo..." class="rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-xs text-white" />
+                <input id="admin-search-input" type="search" value="${escapeHtml(uiState.adminSearchQuery)}" placeholder="Buscar nombre o usuario..." class="rounded-xl bg-slate-950/90 border border-slate-700 px-3 py-2 text-xs text-white" />
               </div>
             </div>
 
@@ -2208,10 +2214,10 @@
         document.getElementById("register-form")?.addEventListener("submit", (e) => {
           e.preventDefault();
           const name = document.getElementById("reg-name")?.value || "";
-          const email = document.getElementById("reg-email")?.value || "";
+          const username = document.getElementById("reg-username")?.value || "";
           const role = document.getElementById("reg-role")?.value || ADVISOR_ROLES[0];
           const password = document.getElementById("reg-password")?.value || "";
-          const res = registerAdvisorAccount({ name, email, password, role });
+          const res = registerAdvisorAccount({ name, username, password, role });
           if (!res.ok) {
             showToast(res.error, "error");
             return;
