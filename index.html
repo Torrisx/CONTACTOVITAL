@@ -1671,7 +1671,7 @@ opacity: 0.5;
       advTab: "wallet", trSearch: "", trRecipient: null,
       adminTab: "orders", orderFilter: "ALL", movFilter: "ALL",
       adminFilterGroup: "ALL", adminSearch: "", adminPage: 1, adminPageSize: 12,
-      revealedPasswords: new Set(), pendingImages: {},
+      revealedPasswords: new Set(),
       cloudActive: false, cloudListenersStarted: false, auditListener: false,
       popups: new Map(), notified: new Set(), redLoaded: false,
       pending: null, busy: false,
@@ -1749,48 +1749,6 @@ opacity: 0.5;
     function openModal(html) { const m = document.getElementById("modal-root"); if (!m) return; m.innerHTML = `<div class="card pop-in w-full max-w-md p-6 my-auto">${html}</div>`; m.classList.remove("hidden"); m.classList.add("flex"); }
     function closeModal() { const m = document.getElementById("modal-root"); if (!m) return; m.classList.add("hidden"); m.classList.remove("flex"); m.innerHTML = ""; uiState.pending = null; uiState.busy = false; }
     const modalOpen = () => { const m = document.getElementById("modal-root"); return Boolean(m && !m.classList.contains("hidden")); };
-
-    // ============================== ARTE DE PRODUCTOS (SVG genérico) ==============================
-    function productArt(p) {
-      const s = Number(p.size) || 1, fancy = Boolean(p.fancy);
-      const bgs = { car: ["#1e3a8a", "#0ea5e9"], doll: ["#831843", "#f472b6"], box: fancy ? ["#6d28d9", "#f59e0b"] : ["#334155", "#64748b"], perfume: ["#0f766e", "#a78bfa"] };
-      const [c1, c2] = bgs[p.art] || bgs.box;
-      let body = "";
-      if (p.art === "car") {
-        const w = s >= 2 ? 150 : 105, h = s >= 2 ? 46 : 34, x = 100 - w / 2, r = s >= 2 ? 15 : 11;
-        body = `<rect x="${x}" y="${105 - h}" width="${w}" height="${h}" rx="10" fill="#f8fafc"/><rect x="${x + w * 0.22}" y="${105 - h - h * 0.7}" width="${w * 0.52}" height="${h * 0.85}" rx="9" fill="#e2e8f0"/><rect x="${x + w * 0.3}" y="${105 - h - h * 0.5}" width="${w * 0.36}" height="${h * 0.5}" rx="5" fill="#38bdf8"/><circle cx="${x + w * 0.22}" cy="107" r="${r}" fill="#0f172a"/><circle cx="${x + w * 0.78}" cy="107" r="${r}" fill="#0f172a"/><circle cx="${x + w * 0.22}" cy="107" r="${r * 0.45}" fill="#94a3b8"/><circle cx="${x + w * 0.78}" cy="107" r="${r * 0.45}" fill="#94a3b8"/>`;
-      } else if (p.art === "doll") {
-        body = `<circle cx="100" cy="48" r="26" fill="#7c2d12"/><circle cx="100" cy="54" r="19" fill="#fcd9b6"/><circle cx="93" cy="53" r="2.2" fill="#0f172a"/><circle cx="107" cy="53" r="2.2" fill="#0f172a"/><path d="M94 61 Q100 66 106 61" stroke="#be123c" stroke-width="2" fill="none"/><polygon points="100,74 66,128 134,128" fill="#fb7185"/><rect x="92" y="126" width="6" height="22" fill="#fcd9b6"/><rect x="102" y="126" width="6" height="22" fill="#fcd9b6"/><line x1="82" y1="96" x2="64" y2="108" stroke="#fcd9b6" stroke-width="6" stroke-linecap="round"/><line x1="118" y1="96" x2="136" y2="108" stroke="#fcd9b6" stroke-width="6" stroke-linecap="round"/>`;
-      } else if (p.art === "perfume") {
-        body = `<rect x="86" y="30" width="28" height="18" rx="4" fill="#facc15"/><rect x="94" y="46" width="12" height="12" fill="#e2e8f0"/><rect x="62" y="58" width="76" height="76" rx="16" fill="rgba(255,255,255,.88)"/><rect x="70" y="86" width="60" height="40" rx="10" fill="#a78bfa"/><circle cx="100" cy="100" r="9" fill="rgba(255,255,255,.65)"/>`;
-      } else {
-        const sz = s >= 3 ? 112 : s === 2 ? 90 : 68, x = 100 - sz / 2, y = 138 - sz, rb = "#fb7185";
-        body = `<rect x="${x}" y="${y}" width="${sz}" height="${sz}" rx="6" fill="${fancy ? "#fde68a" : "#e2e8f0"}"/><rect x="${x - 4}" y="${y}" width="${sz + 8}" height="${sz * 0.22}" rx="5" fill="${fancy ? "#f9a8d4" : "#cbd5e1"}"/><rect x="${100 - 6}" y="${y}" width="12" height="${sz}" fill="${rb}"/><ellipse cx="88" cy="${y - 5}" rx="14" ry="9" fill="${rb}"/><ellipse cx="112" cy="${y - 5}" rx="14" ry="9" fill="${rb}"/><circle cx="100" cy="${y - 3}" r="6" fill="#e11d48"/>`;
-        if (fancy) body += `<circle cx="${x + sz * 0.2}" cy="${y + sz * 0.55}" r="4" fill="#a855f7"/><circle cx="${x + sz * 0.8}" cy="${y + sz * 0.7}" r="4" fill="#06b6d4"/><path d="M40 34 l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4z" fill="#fde047"/><path d="M158 60 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z" fill="#fff"/>`;
-      }
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs><rect width="200" height="160" fill="url(#g)"/><ellipse cx="100" cy="146" rx="52" ry="6" fill="rgba(0,0,0,.25)"/>${body}</svg>`;
-      return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
-    }
-    const productImg = (p) => (p && p.imageData) || productArt(p || { art: "box", size: 2 });
-
-    function resizeImageFile(file, max = 480) {
-      return new Promise((resolve, reject) => {
-        const fr = new FileReader();
-        fr.onerror = () => reject(new Error("No se pudo leer la imagen."));
-        fr.onload = () => {
-          const img = new Image();
-          img.onerror = () => reject(new Error("El archivo no es una imagen válida."));
-          img.onload = () => {
-            const k = Math.min(1, max / Math.max(img.width, img.height));
-            const cv = document.createElement("canvas"); cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
-            cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
-            resolve(cv.toDataURL("image/jpeg", 0.82));
-          };
-          img.src = fr.result;
-        };
-        fr.readAsDataURL(file);
-      });
-    }
 
     // ============================== NORMALIZADORES ==============================
     function sanitizeAdvisorRecord(raw) {
@@ -2062,7 +2020,7 @@ opacity: 0.5;
       });
     }
 
-    function saveProductOp({ session, id, name, priceRaw, stockRaw, opensAtRaw, active, imageData }) {
+    function saveProductOp({ session, id, name, priceRaw, stockRaw, opensAtRaw, active }) {
       return runOp(async (api) => {
         if (!isAuthorizedAdmin(session)) fail("Acceso denegado: solo administradores autorizados.");
         const cleanName = String(name || "").trim(); if (!cleanName) fail("El producto necesita un nombre.");
@@ -2076,7 +2034,7 @@ opacity: 0.5;
         const existing = (await api.get("products", pid)) || readList("products").find((p) => p.id === pid) || null;
         const now = new Date().toISOString();
         const base = existing ? normalizeProduct(existing) : normalizeProduct({ id: pid, art: "box", size: 2, sort: readList("products").length + 1, createdAt: now });
-        const prod = { ...base, name: cleanName, price, stock, opensAt, active: Boolean(active), imageData: imageData !== undefined && imageData !== null ? imageData : base.imageData, updatedAt: now };
+        const prod = { ...base, name: cleanName, price, stock, opensAt, active: Boolean(active), updatedAt: now };
         api.set("products", pid, prod);
         const au = mkAudit(session, existing ? "PRODUCTO_EDITADO" : "PRODUCTO_CREADO", pid, `${cleanName} · precio ${price ? formatVc(price) : "pendiente"} · cantidad ${stock === null ? "ilimitada" : stock} · apertura ${opensAt ? fmtDT(opensAt) : "inmediata"} · ${prod.active ? "activo" : "oculto"}`, now); api.set("audit", au.id, au);
         return { product: prod };
@@ -2375,7 +2333,6 @@ opacity: 0.5;
               const no = !p.price, out = p.stock !== null && p.stock <= 0, locked = isLocked(p), can = !no && !out && !locked && bal >= p.price;
               return `
               <article class="card lift overflow-hidden flex flex-col">
-                <img src="${escapeHtml(productImg(p))}" alt="${escapeHtml(p.name)}" class="w-full aspect-[5/4] object-cover" loading="lazy" />
                 <div class="p-3.5 flex flex-col gap-2.5 flex-1">
                   <h3 class="text-sm font-bold text-white leading-snug">${escapeHtml(p.name)}</h3>
                   <div class="rounded-xl px-3 py-2 text-center ${no ? "border border-dashed border-slate-600 text-slate-400 text-xs" : "bg-emerald-500/10 border border-emerald-400/25 text-emerald-300 font-extrabold text-sm"}">${no ? "Precio por definir" : `🪙 ${escapeHtml(formatNumber(p.price))} VitalCoins`}</div>
@@ -2429,7 +2386,6 @@ opacity: 0.5;
           ${orders.length ? orders.map((o) => { const p = prods.find((x) => x.id === o.productId); return `
             <article class="card p-4">
               <div class="flex items-center gap-3">
-                <img src="${escapeHtml(productImg(p))}" alt="" class="w-14 h-14 rounded-xl object-cover shrink-0" />
                 <div class="flex-1 min-w-0"><p class="text-sm font-bold text-white truncate">${escapeHtml(o.productName)}</p><p class="text-[11px] text-slate-400">${escapeHtml(fmtDate(o.createdAt))} · ${escapeHtml(fmtTime(o.createdAt))} · 🪙 ${escapeHtml(formatNumber(o.costVc))}</p></div>
                 ${statusChip(o.status)}
               </div>
@@ -2453,7 +2409,6 @@ opacity: 0.5;
       return `
         <article class="tile p-3.5 ${o.status === "PENDIENTE" ? "border-amber-400/40!" : ""}">
           <div class="flex items-center gap-3">
-            <img src="${escapeHtml(productImg(p))}" alt="" class="w-12 h-12 rounded-lg object-cover shrink-0" />
             <div class="flex-1 min-w-0"><p class="text-sm font-bold text-white truncate">${escapeHtml(o.productName)}</p><p class="text-[11px] text-slate-400 truncate">${escapeHtml(o.advisorName)} · ${escapeHtml(groupShort(o.advisorGroup || ""))}</p><p class="text-[11px] text-slate-500">${escapeHtml(fmtDate(o.createdAt))} · ${escapeHtml(fmtTime(o.createdAt))} · 🪙 ${escapeHtml(formatNumber(o.costVc))}</p></div>
             ${statusChip(o.status)}
           </div>
@@ -2525,12 +2480,10 @@ opacity: 0.5;
         </div>`;
     }
     function productCard(p, isNew = false, slot = 1) {
-      const id = isNew ? `new${slot}` : p.id, pending = uiState.pendingImages[id];
+      const id = isNew ? `new${slot}` : p.id;
       return `
         <form data-form="product" data-id="${escapeHtml(id)}" class="card p-4 space-y-3 ${!isNew && !p.active ? "opacity-60" : ""}">
           ${isNew ? `<p class="text-xs font-extrabold text-cyan-300 uppercase">＋ Nuevo producto ${slot}</p>` : ""}
-          <img id="prod-img-${escapeHtml(id)}" src="${escapeHtml(pending || (isNew ? productArt({ art: "box", size: 2 }) : productImg(p)))}" alt="" class="w-full aspect-[5/4] object-cover rounded-xl" />
-          <div><label class="label">Imagen</label><input type="file" accept="image/*" data-image-for="${escapeHtml(id)}" class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-white file:cursor-pointer" /></div>
           <div><label class="label">Nombre</label><input name="name" class="input" required value="${escapeHtml(isNew ? "" : p.name)}" placeholder="Nombre del producto" /></div>
           <div><label class="label">Precio en VitalCoins</label><input name="price" type="number" min="1" step="1" class="input" value="${isNew || !p.price ? "" : escapeHtml(p.price)}" placeholder="Pendiente (sin precio)" /></div>
           <div><label class="label">Cantidad disponible</label><input name="stock" type="number" min="0" step="1" class="input" value="${isNew || p.stock === null ? "" : escapeHtml(p.stock)}" placeholder="Vacío = ilimitado" /></div>
@@ -2652,7 +2605,6 @@ opacity: 0.5;
           const bal = Number(me.balance) || 0;
           return openModal(`
             <h3 class="text-base font-extrabold text-white">Confirmar canje</h3>
-            <img src="${escapeHtml(productImg(p))}" alt="" class="w-full aspect-[5/3] object-cover rounded-xl mt-3" />
             <p class="mt-3 text-sm font-bold text-white">${escapeHtml(p.name)}</p>
             <div class="mt-2 tile p-3 text-sm space-y-1">
               <div class="flex justify-between"><span class="text-slate-400">Precio</span><strong class="text-emerald-300">${escapeHtml(formatVc(p.price))}</strong></div>
@@ -2746,10 +2698,10 @@ opacity: 0.5;
       }
       if (kind === "product") {
         if (uiState.busy) return; uiState.busy = true; const id = f.dataset.id;
-        const res = await saveProductOp({ session, id, name: fd.get("name"), priceRaw: fd.get("price"), stockRaw: fd.get("stock"), opensAtRaw: fd.get("opensAt"), active: fd.get("active") !== null, imageData: uiState.pendingImages[id] });
+        const res = await saveProductOp({ session, id, name: fd.get("name"), priceRaw: fd.get("price"), stockRaw: fd.get("stock"), opensAtRaw: fd.get("opensAt"), active: fd.get("active") !== null });
         uiState.busy = false;
         if (!res.ok) return showToast(res.error, "error");
-        delete uiState.pendingImages[id]; showToast("Producto guardado.", "success"); return requestRender(0);
+        showToast("Producto guardado.", "success"); return requestRender(0);
       }
     });
 
@@ -2761,10 +2713,6 @@ opacity: 0.5;
       const t = e.target;
       if (t.id === "admin-filter-group") { uiState.adminFilterGroup = t.value; uiState.adminPage = 1; const el = document.getElementById("adv-table-root"); if (el) el.innerHTML = advisorsTableHtml(); }
       if (t.id === "mov-filter") { uiState.movFilter = t.value; renderApp(); }
-      if (t.dataset && t.dataset.imageFor && t.files && t.files[0]) {
-        try { const data = await resizeImageFile(t.files[0]); uiState.pendingImages[t.dataset.imageFor] = data; const img = document.getElementById(`prod-img-${t.dataset.imageFor}`); if (img) img.src = data; showToast("Imagen lista. Pulsa Guardar para aplicarla.", "info"); }
-        catch (err) { showToast(err.message, "error"); }
-      }
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modalOpen()) closeModal(); });
 
