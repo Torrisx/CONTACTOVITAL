@@ -2330,15 +2330,13 @@ opacity: 0.5;
           <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-extrabold text-white">Catálogo de canje</h2><span class="chip bg-cyan-500/15 text-cyan-200 border-cyan-400/30">🪙 ${escapeHtml(formatNumber(bal))}</span></div>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             ${prods.map((p) => {
-              const no = !p.price, out = p.stock !== null && p.stock <= 0, locked = isLocked(p), can = !no && !out && !locked && bal >= p.price;
+              const no = !p.price, out = p.stock !== null && p.stock <= 0;
               return `
               <article class="card lift overflow-hidden flex flex-col">
                 <div class="p-3.5 flex flex-col gap-2.5 flex-1">
                   <h3 class="text-sm font-bold text-white leading-snug">${escapeHtml(p.name)}</h3>
                   <div class="rounded-xl px-3 py-2 text-center ${no ? "border border-dashed border-slate-600 text-slate-400 text-xs" : "bg-emerald-500/10 border border-emerald-400/25 text-emerald-300 font-extrabold text-sm"}">${no ? "Precio por definir" : `🪙 ${escapeHtml(formatNumber(p.price))} VitalCoins`}</div>
-                  ${locked ? `<div class="rounded-xl px-3 py-2 text-center bg-cyan-500/10 border border-cyan-400/30"><p class="text-[10px] uppercase font-bold text-cyan-300">Abre en</p><p class="font-extrabold text-white text-base" style="font-variant-numeric:tabular-nums" data-countdown="${escapeHtml(p.opensAt)}">${escapeHtml(fmtCountdown(Date.parse(p.opensAt) - Date.now()))}</p><p class="text-[10px] text-slate-400">${escapeHtml(fmtDate(p.opensAt))} · ${escapeHtml(fmtTime(p.opensAt))}</p></div>` : ""}
                   ${p.stock === null ? "" : out ? `<span class="chip st-RECHAZADO self-start">Agotado</span>` : `<span class="chip bg-amber-500/15 text-amber-300 border-amber-400/30 self-start">Quedan ${escapeHtml(formatNumber(p.stock))}</span>`}
-                  <button type="button" class="btn ${can ? "btn-success" : "btn-ghost"} mt-auto w-full" data-act="redeem-open" data-id="${escapeHtml(p.id)}" ${can ? "" : "disabled"}>${no ? "Próximamente" : locked ? "Aún no disponible" : out ? "Agotado" : can ? "Canjear" : "Saldo insuficiente"}</button>
                 </div>
               </article>`; }).join("")}
           </div>
