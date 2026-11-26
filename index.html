@@ -1718,6 +1718,12 @@ opacity: 0.5;
     function escapeHtml(v) { return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
     const tsOf = (o) => new Date((o && (o.updatedAt || o.createdAt)) || 0).getTime();
     const byNewest = (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    const isLocked = (p) => Boolean(p && p.opensAt && Date.now() < Date.parse(p.opensAt));
+    function fmtCountdown(ms) {
+      const t = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(t / 86400), h = Math.floor((t % 86400) / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60, z = (n) => String(n).padStart(2, "0");
+      return `${d > 0 ? d + " d " : ""}${z(h)}:${z(m)}:${z(sec)}`;
+    }
+    function toLocalInput(iso) { const d = new Date(iso); if (!iso || Number.isNaN(d.getTime())) return ""; const z = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`; }
     function toPositiveInt(v) { const n = Math.round(Number(v)); return Number.isFinite(n) && n > 0 && n <= 1e9 ? n : 0; }
 
     function showToast(message, type = "info") {
@@ -1797,9 +1803,10 @@ opacity: 0.5;
     }
     function normalizeProduct(raw, idx = 0) {
       const o = raw && typeof raw === "object" ? raw : {};
+      const oa = o.opensAt ? new Date(o.opensAt) : null;
       const sn = o.stock === null || o.stock === undefined || o.stock === "" ? NaN : Math.round(Number(o.stock));
       const pn = o.price === null || o.price === undefined || o.price === "" ? NaN : Math.round(Number(o.price));
-      return { id: String(o.id || generateId("prod")), name: String(o.name || "Producto").trim() || "Producto", art: String(o.art || "box"), size: Number(o.size) || 2, fancy: Boolean(o.fancy), price: Number.isFinite(pn) && pn > 0 ? pn : null, stock: Number.isFinite(sn) && sn >= 0 ? sn : null, active: o.active !== false, imageData: typeof o.imageData === "string" ? o.imageData : "", sort: Number.isFinite(Number(o.sort)) ? Number(o.sort) : idx, createdAt: o.createdAt || new Date().toISOString(), updatedAt: o.updatedAt || o.createdAt || new Date().toISOString() };
+      return { id: String(o.id || generateId("prod")), name: String(o.name || "Producto").trim() || "Producto", art: String(o.art || "box"), size: Number(o.size) || 2, fancy: Boolean(o.fancy), price: Number.isFinite(pn) && pn > 0 ? pn : null, stock: Number.isFinite(sn) && sn >= 0 ? sn : null, opensAt: oa && !Number.isNaN(oa.getTime()) ? oa.toISOString() : null, active: o.active !== false, imageData: typeof o.imageData === "string" ? o.imageData : "", sort: Number.isFinite(Number(o.sort)) ? Number(o.sort) : idx, createdAt: o.createdAt || new Date().toISOString(), updatedAt: o.updatedAt || o.createdAt || new Date().toISOString() };
     }
     const defaultProducts = () => PRODUCT_DEFAULTS.map((d, i) => normalizeProduct({ ...d, price: null, active: true, sort: i, createdAt: "2026-01-01T00:00:00.000Z" }, i));
     function normalizeStatus(s) {
@@ -1971,6 +1978,7 @@ opacity: 0.5;
         const prod = normalizeProduct(prodRaw);
         if (!prod.active) fail("Este producto no está disponible.");
         if (!prod.price) fail("Este producto aún no tiene precio definido.");
+        if (isLocked(prod)) fail(`"${prod.name}" aún no está abierto para canje. Abre el ${fmtDate(prod.opensAt)} a las ${fmtTime(prod.opensAt)}.`);
         if (prod.stock !== null && prod.stock <= 0) fail(`"${prod.name}" está agotado.`);
         const bal = Number(advisor.balance) || 0;
         if (bal < prod.price) fail(`Te faltan ${formatVc(prod.price - bal)} para canjear "${prod.name}".`);
@@ -2054,7 +2062,7 @@ opacity: 0.5;
       });
     }
 
-    function saveProductOp({ session, id, name, priceRaw, stockRaw, active, imageData }) {
+    function saveProductOp({ session, id, name, priceRaw, stockRaw, opensAtRaw, active, imageData }) {
       return runOp(async (api) => {
         if (!isAuthorizedAdmin(session)) fail("Acceso denegado: solo administradores autorizados.");
         const cleanName = String(name || "").trim(); if (!cleanName) fail("El producto necesita un nombre.");
@@ -2062,13 +2070,15 @@ opacity: 0.5;
         if (pr !== "") { price = Math.round(Number(pr)); if (!Number.isFinite(price) || price <= 0 || price > 1e9) fail("El precio debe ser un entero mayor a 0 (o déjalo vacío para 'pendiente')."); }
         const sr = String(stockRaw ?? "").trim(); let stock = null;
         if (sr !== "") { stock = Math.round(Number(sr)); if (!Number.isFinite(stock) || stock < 0 || stock > 1e6) fail("La cantidad debe ser un entero de 0 o más (o déjala vacía para 'ilimitado')."); }
+        const oraw = String(opensAtRaw ?? "").trim(); let opensAt = null;
+        if (oraw !== "") { const dt = new Date(oraw); if (Number.isNaN(dt.getTime())) fail("La fecha y hora de apertura no es válida."); opensAt = dt.toISOString(); }
         const pid = id && !/^new\d*$/.test(id) ? id : generateId("prod");
         const existing = (await api.get("products", pid)) || readList("products").find((p) => p.id === pid) || null;
         const now = new Date().toISOString();
         const base = existing ? normalizeProduct(existing) : normalizeProduct({ id: pid, art: "box", size: 2, sort: readList("products").length + 1, createdAt: now });
-        const prod = { ...base, name: cleanName, price, stock, active: Boolean(active), imageData: imageData !== undefined && imageData !== null ? imageData : base.imageData, updatedAt: now };
+        const prod = { ...base, name: cleanName, price, stock, opensAt, active: Boolean(active), imageData: imageData !== undefined && imageData !== null ? imageData : base.imageData, updatedAt: now };
         api.set("products", pid, prod);
-        const au = mkAudit(session, existing ? "PRODUCTO_EDITADO" : "PRODUCTO_CREADO", pid, `${cleanName} · precio ${price ? formatVc(price) : "pendiente"} · cantidad ${stock === null ? "ilimitada" : stock} · ${prod.active ? "activo" : "oculto"}`, now); api.set("audit", au.id, au);
+        const au = mkAudit(session, existing ? "PRODUCTO_EDITADO" : "PRODUCTO_CREADO", pid, `${cleanName} · precio ${price ? formatVc(price) : "pendiente"} · cantidad ${stock === null ? "ilimitada" : stock} · apertura ${opensAt ? fmtDT(opensAt) : "inmediata"} · ${prod.active ? "activo" : "oculto"}`, now); api.set("audit", au.id, au);
         return { product: prod };
       });
     }
@@ -2362,15 +2372,16 @@ opacity: 0.5;
           <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-extrabold text-white">Catálogo de canje</h2><span class="chip bg-cyan-500/15 text-cyan-200 border-cyan-400/30">🪙 ${escapeHtml(formatNumber(bal))}</span></div>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             ${prods.map((p) => {
-              const no = !p.price, out = p.stock !== null && p.stock <= 0, can = !no && !out && bal >= p.price;
+              const no = !p.price, out = p.stock !== null && p.stock <= 0, locked = isLocked(p), can = !no && !out && !locked && bal >= p.price;
               return `
               <article class="card lift overflow-hidden flex flex-col">
                 <img src="${escapeHtml(productImg(p))}" alt="${escapeHtml(p.name)}" class="w-full aspect-[5/4] object-cover" loading="lazy" />
                 <div class="p-3.5 flex flex-col gap-2.5 flex-1">
                   <h3 class="text-sm font-bold text-white leading-snug">${escapeHtml(p.name)}</h3>
                   <div class="rounded-xl px-3 py-2 text-center ${no ? "border border-dashed border-slate-600 text-slate-400 text-xs" : "bg-emerald-500/10 border border-emerald-400/25 text-emerald-300 font-extrabold text-sm"}">${no ? "Precio por definir" : `🪙 ${escapeHtml(formatNumber(p.price))} VitalCoins`}</div>
+                  ${locked ? `<div class="rounded-xl px-3 py-2 text-center bg-cyan-500/10 border border-cyan-400/30"><p class="text-[10px] uppercase font-bold text-cyan-300">Abre en</p><p class="font-extrabold text-white text-base" style="font-variant-numeric:tabular-nums" data-countdown="${escapeHtml(p.opensAt)}">${escapeHtml(fmtCountdown(Date.parse(p.opensAt) - Date.now()))}</p><p class="text-[10px] text-slate-400">${escapeHtml(fmtDate(p.opensAt))} · ${escapeHtml(fmtTime(p.opensAt))}</p></div>` : ""}
                   ${p.stock === null ? "" : out ? `<span class="chip st-RECHAZADO self-start">Agotado</span>` : `<span class="chip bg-amber-500/15 text-amber-300 border-amber-400/30 self-start">Quedan ${escapeHtml(formatNumber(p.stock))}</span>`}
-                  <button type="button" class="btn ${can ? "btn-success" : "btn-ghost"} mt-auto w-full" data-act="redeem-open" data-id="${escapeHtml(p.id)}" ${can ? "" : "disabled"}>${no ? "Próximamente" : out ? "Agotado" : can ? "Canjear" : "Saldo insuficiente"}</button>
+                  <button type="button" class="btn ${can ? "btn-success" : "btn-ghost"} mt-auto w-full" data-act="redeem-open" data-id="${escapeHtml(p.id)}" ${can ? "" : "disabled"}>${no ? "Próximamente" : locked ? "Aún no disponible" : out ? "Agotado" : can ? "Canjear" : "Saldo insuficiente"}</button>
                 </div>
               </article>`; }).join("")}
           </div>
@@ -2523,6 +2534,8 @@ opacity: 0.5;
           <div><label class="label">Nombre</label><input name="name" class="input" required value="${escapeHtml(isNew ? "" : p.name)}" placeholder="Nombre del producto" /></div>
           <div><label class="label">Precio en VitalCoins</label><input name="price" type="number" min="1" step="1" class="input" value="${isNew || !p.price ? "" : escapeHtml(p.price)}" placeholder="Pendiente (sin precio)" /></div>
           <div><label class="label">Cantidad disponible</label><input name="stock" type="number" min="0" step="1" class="input" value="${isNew || p.stock === null ? "" : escapeHtml(p.stock)}" placeholder="Vacío = ilimitado" /></div>
+          <div><label class="label">⏱ Se abre para canje (opcional)</label><input name="opensAt" type="datetime-local" class="input" value="${isNew ? "" : escapeHtml(toLocalInput(p.opensAt))}" />
+            <p class="text-[11px] mt-1 ${!isNew && isLocked(p) ? "text-amber-300" : "text-slate-500"}">${!isNew && isLocked(p) ? `Cerrado hasta ${escapeHtml(fmtDT(p.opensAt))}` : "Vacío = disponible desde ya"}</p></div>
           <label class="flex items-center gap-2 text-xs text-slate-200 cursor-pointer"><input name="active" type="checkbox" class="accent-cyan-400" ${isNew || p.active ? "checked" : ""} /> Visible en el catálogo</label>
           <button type="submit" class="btn btn-primary w-full">${isNew ? "Crear producto" : "Guardar cambios"}</button>
         </form>`;
@@ -2634,6 +2647,7 @@ opacity: 0.5;
         case "redeem-open": {
           const me = getAdvisors().find((a) => a.id === session?.id), p = getProducts().find((x) => x.id === d.id); if (!me || !p) return;
           if (!p.price) return showToast("Este producto aún no tiene precio.", "warning");
+          if (isLocked(p)) return showToast(`Este premio abre el ${fmtDate(p.opensAt)} a las ${fmtTime(p.opensAt)}.`, "warning");
           uiState.pending = { kind: "redeem", productId: p.id, requestId: generateId("rq") };
           const bal = Number(me.balance) || 0;
           return openModal(`
@@ -2732,7 +2746,7 @@ opacity: 0.5;
       }
       if (kind === "product") {
         if (uiState.busy) return; uiState.busy = true; const id = f.dataset.id;
-        const res = await saveProductOp({ session, id, name: fd.get("name"), priceRaw: fd.get("price"), stockRaw: fd.get("stock"), active: fd.get("active") !== null, imageData: uiState.pendingImages[id] });
+        const res = await saveProductOp({ session, id, name: fd.get("name"), priceRaw: fd.get("price"), stockRaw: fd.get("stock"), opensAtRaw: fd.get("opensAt"), active: fd.get("active") !== null, imageData: uiState.pendingImages[id] });
         uiState.busy = false;
         if (!res.ok) return showToast(res.error, "error");
         delete uiState.pendingImages[id]; showToast("Producto guardado.", "success"); return requestRender(0);
@@ -2754,9 +2768,19 @@ opacity: 0.5;
     });
     document.addEventListener("keydown", (e) => { if (e.key === "Escape" && modalOpen()) closeModal(); });
 
+    function startTicker() {
+      setInterval(() => {
+        document.querySelectorAll("[data-countdown]").forEach((el) => {
+          const ms = Date.parse(el.dataset.countdown) - Date.now();
+          if (ms <= 0) { if (!el.dataset.done) { el.dataset.done = "1"; requestRender(0); } return; }
+          el.textContent = fmtCountdown(ms);
+        });
+      }, 1000);
+    }
     getProducts(); // asegura catálogo inicial local (sin precios)
     renderApp();
     initFirebaseAndAuth();
+    startTicker();
   </script>
 </body>
 </html>
