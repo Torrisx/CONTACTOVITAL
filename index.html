@@ -1797,8 +1797,9 @@ opacity: 0.5;
     }
     function normalizeProduct(raw, idx = 0) {
       const o = raw && typeof raw === "object" ? raw : {};
+      const sn = o.stock === null || o.stock === undefined || o.stock === "" ? NaN : Math.round(Number(o.stock));
       const pn = o.price === null || o.price === undefined || o.price === "" ? NaN : Math.round(Number(o.price));
-      return { id: String(o.id || generateId("prod")), name: String(o.name || "Producto").trim() || "Producto", art: String(o.art || "box"), size: Number(o.size) || 2, fancy: Boolean(o.fancy), price: Number.isFinite(pn) && pn > 0 ? pn : null, active: o.active !== false, imageData: typeof o.imageData === "string" ? o.imageData : "", sort: Number.isFinite(Number(o.sort)) ? Number(o.sort) : idx, createdAt: o.createdAt || new Date().toISOString(), updatedAt: o.updatedAt || o.createdAt || new Date().toISOString() };
+      return { id: String(o.id || generateId("prod")), name: String(o.name || "Producto").trim() || "Producto", art: String(o.art || "box"), size: Number(o.size) || 2, fancy: Boolean(o.fancy), price: Number.isFinite(pn) && pn > 0 ? pn : null, stock: Number.isFinite(sn) && sn >= 0 ? sn : null, active: o.active !== false, imageData: typeof o.imageData === "string" ? o.imageData : "", sort: Number.isFinite(Number(o.sort)) ? Number(o.sort) : idx, createdAt: o.createdAt || new Date().toISOString(), updatedAt: o.updatedAt || o.createdAt || new Date().toISOString() };
     }
     const defaultProducts = () => PRODUCT_DEFAULTS.map((d, i) => normalizeProduct({ ...d, price: null, active: true, sort: i, createdAt: "2026-01-01T00:00:00.000Z" }, i));
     function normalizeStatus(s) {
@@ -1962,7 +1963,7 @@ opacity: 0.5;
         if (!requestId) fail("Solicitud inválida.");
         const orderId = `red_${requestId}`;
         const advisor = await api.get("advisors", session.id);
-        const prodRaw = await api.get("products", productId);
+        const prodRaw = (await api.get("products", productId)) || readList("products").find((x) => x.id === productId) || null;
         const dup = await api.get("redemptions", orderId);
         if (dup) fail("Este canje ya fue registrado.");
         if (!advisor) fail("No se encontró tu cuenta.");
@@ -1970,12 +1971,14 @@ opacity: 0.5;
         const prod = normalizeProduct(prodRaw);
         if (!prod.active) fail("Este producto no está disponible.");
         if (!prod.price) fail("Este producto aún no tiene precio definido.");
+        if (prod.stock !== null && prod.stock <= 0) fail(`"${prod.name}" está agotado.`);
         const bal = Number(advisor.balance) || 0;
         if (bal < prod.price) fail(`Te faltan ${formatVc(prod.price - bal)} para canjear "${prod.name}".`);
         const now = new Date().toISOString(), group = normalizeAdvisorRole(advisor.role);
-        const order = { id: orderId, advisorId: advisor.id, advisorName: advisor.name, advisorEmail: advisor.email, advisorGroup: group, productId: prod.id, productName: prod.name, rewardId: prod.id, rewardTitle: prod.name, costVc: prod.price, status: "PENDIENTE", refunded: false, createdAt: now, updatedAt: now, statusHistory: [{ status: "PENDIENTE", at: now, by: advisor.name }] };
+        const order = { id: orderId, advisorId: advisor.id, advisorName: advisor.name, advisorEmail: advisor.email, advisorGroup: group, productId: prod.id, productName: prod.name, rewardId: prod.id, rewardTitle: prod.name, costVc: prod.price, status: "PENDIENTE", refunded: false, stockDeducted: prod.stock !== null, createdAt: now, updatedAt: now, statusHistory: [{ status: "PENDIENTE", at: now, by: advisor.name }] };
         const tx = { id: `tx_${requestId}`, type: "REWARD_REDEMPTION", senderId: advisor.id, senderName: advisor.name, senderRole: group, recipientId: "REWARD_STORE", recipientName: prod.name, recipientRole: `Canje (${group})`, amount: prod.price, orderId, note: `Canje: ${prod.name}`, createdAt: now };
         api.set("advisors", advisor.id, { ...advisor, balance: bal - prod.price, updatedAt: now });
+        if (prod.stock !== null) api.set("products", prod.id, { ...prod, stock: prod.stock - 1, updatedAt: now });
         api.set("redemptions", orderId, order);
         api.set("transactions", tx.id, tx);
         const au = mkAudit(session, "CANJE_CREADO", orderId, `${advisor.name} canjeó ${prod.name} por ${formatVc(prod.price)}`, now); api.set("audit", au.id, au);
@@ -1991,9 +1994,10 @@ opacity: 0.5;
         const order = normalizeOrder(raw);
         if (!NEXT_STATUS[order.status].includes(newStatus)) fail(`No se puede pasar de "${ORDER_STATUS[order.status]}" a "${ORDER_STATUS[newStatus]}".`);
         const now = new Date().toISOString();
-        let advisor = null, refundTx = null;
+        let advisor = null, refundTx = null, prodBack = null;
         if (newStatus === "RECHAZADO") {
           advisor = await api.get("advisors", order.advisorId);
+          if (raw.stockDeducted) { const pr = (await api.get("products", order.productId)) || readList("products").find((x) => x.id === order.productId) || null; if (pr) prodBack = normalizeProduct(pr); }
           const dup = await api.get("transactions", `tx_refund_${orderId}`);
           if (order.refunded || dup) fail("Las monedas de este pedido ya fueron devueltas.");
           if (!advisor) fail("No se encontró al asesor para devolverle las monedas; el pedido no se rechazó.");
@@ -2007,6 +2011,7 @@ opacity: 0.5;
           refundTx = { id: `tx_refund_${orderId}`, type: "ORDER_REFUND", senderId: "REWARD_STORE", senderName: "Tienda de canjes", senderRole: "Sistema", recipientId: advisor.id, recipientName: advisor.name, recipientRole: normalizeAdvisorRole(advisor.role), amount: order.costVc, orderId, note: `Devolución por pedido rechazado: ${order.productName}`, createdAt: now };
           api.set("advisors", advisor.id, { ...advisor, balance: bal + order.costVc, updatedAt: now });
           api.set("transactions", refundTx.id, refundTx);
+          if (prodBack && prodBack.stock !== null) api.set("products", prodBack.id, { ...prodBack, stock: prodBack.stock + 1, updatedAt: now });
         }
         api.set("redemptions", orderId, upd);
         const au = mkAudit(session, newStatus === "RECHAZADO" ? "PEDIDO_RECHAZADO" : "PEDIDO_" + newStatus, orderId, `${order.advisorName} · ${order.productName} → ${ORDER_STATUS[newStatus]}${newStatus === "RECHAZADO" ? ` (devueltos ${formatVc(order.costVc)})` : ""}`, now); api.set("audit", au.id, au);
@@ -2049,19 +2054,21 @@ opacity: 0.5;
       });
     }
 
-    function saveProductOp({ session, id, name, priceRaw, active, imageData }) {
+    function saveProductOp({ session, id, name, priceRaw, stockRaw, active, imageData }) {
       return runOp(async (api) => {
         if (!isAuthorizedAdmin(session)) fail("Acceso denegado: solo administradores autorizados.");
         const cleanName = String(name || "").trim(); if (!cleanName) fail("El producto necesita un nombre.");
         const pr = String(priceRaw ?? "").trim(); let price = null;
         if (pr !== "") { price = Math.round(Number(pr)); if (!Number.isFinite(price) || price <= 0 || price > 1e9) fail("El precio debe ser un entero mayor a 0 (o déjalo vacío para 'pendiente')."); }
-        const pid = id && id !== "new" ? id : generateId("prod");
+        const sr = String(stockRaw ?? "").trim(); let stock = null;
+        if (sr !== "") { stock = Math.round(Number(sr)); if (!Number.isFinite(stock) || stock < 0 || stock > 1e6) fail("La cantidad debe ser un entero de 0 o más (o déjala vacía para 'ilimitado')."); }
+        const pid = id && !/^new\d*$/.test(id) ? id : generateId("prod");
         const existing = (await api.get("products", pid)) || readList("products").find((p) => p.id === pid) || null;
         const now = new Date().toISOString();
         const base = existing ? normalizeProduct(existing) : normalizeProduct({ id: pid, art: "box", size: 2, sort: readList("products").length + 1, createdAt: now });
-        const prod = { ...base, name: cleanName, price, active: Boolean(active), imageData: imageData !== undefined && imageData !== null ? imageData : base.imageData, updatedAt: now };
+        const prod = { ...base, name: cleanName, price, stock, active: Boolean(active), imageData: imageData !== undefined && imageData !== null ? imageData : base.imageData, updatedAt: now };
         api.set("products", pid, prod);
-        const au = mkAudit(session, existing ? "PRODUCTO_EDITADO" : "PRODUCTO_CREADO", pid, `${cleanName} · precio ${price ? formatVc(price) : "pendiente"} · ${prod.active ? "activo" : "oculto"}`, now); api.set("audit", au.id, au);
+        const au = mkAudit(session, existing ? "PRODUCTO_EDITADO" : "PRODUCTO_CREADO", pid, `${cleanName} · precio ${price ? formatVc(price) : "pendiente"} · cantidad ${stock === null ? "ilimitada" : stock} · ${prod.active ? "activo" : "oculto"}`, now); api.set("audit", au.id, au);
         return { product: prod };
       });
     }
@@ -2355,14 +2362,15 @@ opacity: 0.5;
           <div class="flex items-center justify-between mb-4"><h2 class="text-lg font-extrabold text-white">Catálogo de canje</h2><span class="chip bg-cyan-500/15 text-cyan-200 border-cyan-400/30">🪙 ${escapeHtml(formatNumber(bal))}</span></div>
           <div class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             ${prods.map((p) => {
-              const no = !p.price, can = !no && bal >= p.price;
+              const no = !p.price, out = p.stock !== null && p.stock <= 0, can = !no && !out && bal >= p.price;
               return `
               <article class="card lift overflow-hidden flex flex-col">
                 <img src="${escapeHtml(productImg(p))}" alt="${escapeHtml(p.name)}" class="w-full aspect-[5/4] object-cover" loading="lazy" />
                 <div class="p-3.5 flex flex-col gap-2.5 flex-1">
                   <h3 class="text-sm font-bold text-white leading-snug">${escapeHtml(p.name)}</h3>
                   <div class="rounded-xl px-3 py-2 text-center ${no ? "border border-dashed border-slate-600 text-slate-400 text-xs" : "bg-emerald-500/10 border border-emerald-400/25 text-emerald-300 font-extrabold text-sm"}">${no ? "Precio por definir" : `🪙 ${escapeHtml(formatNumber(p.price))} VitalCoins`}</div>
-                  <button type="button" class="btn ${can ? "btn-success" : "btn-ghost"} mt-auto w-full" data-act="redeem-open" data-id="${escapeHtml(p.id)}" ${can ? "" : "disabled"}>${no ? "Próximamente" : can ? "Canjear" : "Saldo insuficiente"}</button>
+                  ${p.stock === null ? "" : out ? `<span class="chip st-RECHAZADO self-start">Agotado</span>` : `<span class="chip bg-amber-500/15 text-amber-300 border-amber-400/30 self-start">Quedan ${escapeHtml(formatNumber(p.stock))}</span>`}
+                  <button type="button" class="btn ${can ? "btn-success" : "btn-ghost"} mt-auto w-full" data-act="redeem-open" data-id="${escapeHtml(p.id)}" ${can ? "" : "disabled"}>${no ? "Próximamente" : out ? "Agotado" : can ? "Canjear" : "Saldo insuficiente"}</button>
                 </div>
               </article>`; }).join("")}
           </div>
@@ -2505,21 +2513,23 @@ opacity: 0.5;
           </section>
         </div>`;
     }
-    function productCard(p, isNew = false) {
-      const id = isNew ? "new" : p.id, pending = uiState.pendingImages[id];
+    function productCard(p, isNew = false, slot = 1) {
+      const id = isNew ? `new${slot}` : p.id, pending = uiState.pendingImages[id];
       return `
         <form data-form="product" data-id="${escapeHtml(id)}" class="card p-4 space-y-3 ${!isNew && !p.active ? "opacity-60" : ""}">
+          ${isNew ? `<p class="text-xs font-extrabold text-cyan-300 uppercase">＋ Nuevo producto ${slot}</p>` : ""}
           <img id="prod-img-${escapeHtml(id)}" src="${escapeHtml(pending || (isNew ? productArt({ art: "box", size: 2 }) : productImg(p)))}" alt="" class="w-full aspect-[5/4] object-cover rounded-xl" />
           <div><label class="label">Imagen</label><input type="file" accept="image/*" data-image-for="${escapeHtml(id)}" class="block w-full text-xs text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-700 file:px-3 file:py-1.5 file:text-white file:cursor-pointer" /></div>
           <div><label class="label">Nombre</label><input name="name" class="input" required value="${escapeHtml(isNew ? "" : p.name)}" placeholder="Nombre del producto" /></div>
           <div><label class="label">Precio en VitalCoins</label><input name="price" type="number" min="1" step="1" class="input" value="${isNew || !p.price ? "" : escapeHtml(p.price)}" placeholder="Pendiente (sin precio)" /></div>
+          <div><label class="label">Cantidad disponible</label><input name="stock" type="number" min="0" step="1" class="input" value="${isNew || p.stock === null ? "" : escapeHtml(p.stock)}" placeholder="Vacío = ilimitado" /></div>
           <label class="flex items-center gap-2 text-xs text-slate-200 cursor-pointer"><input name="active" type="checkbox" class="accent-cyan-400" ${isNew || p.active ? "checked" : ""} /> Visible en el catálogo</label>
           <button type="submit" class="btn btn-primary w-full">${isNew ? "Crear producto" : "Guardar cambios"}</button>
         </form>`;
     }
     function adminProducts() {
-      return `<div class="fade-in space-y-4"><div><h2 class="text-lg font-extrabold text-white">Productos y precios</h2><p class="text-xs text-slate-400">Los productos sin precio aparecen como "Precio por definir" y no se pueden canjear.</p></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${getProducts().map((p) => productCard(p)).join("")}${productCard({}, true)}</div></div>`;
+      return `<div class="fade-in space-y-4"><div><h2 class="text-lg font-extrabold text-white">Productos y precios</h2><p class="text-xs text-slate-400">Sin precio = "Precio por definir" y no se canjea. Cantidad vacía = ilimitada; con cantidad, baja con cada canje y se devuelve si se rechaza el pedido. Abajo hay 6 espacios para crear productos nuevos.</p></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">${getProducts().map((p) => productCard(p)).join("")}${[1, 2, 3, 4, 5, 6].map((n) => productCard({}, true, n)).join("")}</div></div>`;
     }
     function adminMovements() {
       const f = uiState.movFilter;
@@ -2722,7 +2732,7 @@ opacity: 0.5;
       }
       if (kind === "product") {
         if (uiState.busy) return; uiState.busy = true; const id = f.dataset.id;
-        const res = await saveProductOp({ session, id, name: fd.get("name"), priceRaw: fd.get("price"), active: fd.get("active") !== null, imageData: uiState.pendingImages[id] });
+        const res = await saveProductOp({ session, id, name: fd.get("name"), priceRaw: fd.get("price"), stockRaw: fd.get("stock"), active: fd.get("active") !== null, imageData: uiState.pendingImages[id] });
         uiState.busy = false;
         if (!res.ok) return showToast(res.error, "error");
         delete uiState.pendingImages[id]; showToast("Producto guardado.", "success"); return requestRender(0);
